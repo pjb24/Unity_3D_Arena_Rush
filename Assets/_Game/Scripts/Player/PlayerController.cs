@@ -15,6 +15,9 @@ public class PlayerController : MonoBehaviour
     [Header("Camera Reference")]
     [SerializeField] private Transform _cameraTransform;
 
+    [Header("Input")]
+    public InputActionReference _moveAction;    // Vector2(WASD)
+
     // runtime
     private Vector2 _moveInput;         // WASD
     private Rigidbody _rb;
@@ -26,17 +29,25 @@ public class PlayerController : MonoBehaviour
         _rb.constraints = RigidbodyConstraints.FreezeRotation;
     }
 
+    private void OnEnable()
+    {
+        if (_moveAction != null) _moveAction.action.Enable();
+    }
+
+    private void OnDisable()
+    {
+        if (_moveAction != null) _moveAction.action.Disable();
+    }
+
+    private void Update()
+    {
+        _moveInput = _moveAction != null ? _moveAction.action.ReadValue<Vector2>() : Vector2.zero;
+    }
+
     private void FixedUpdate()
     {
         Move();
         FaceCameraDirection();
-    }
-
-    // === Input System 콜백 ===
-    // PlayerInput 컴포넌트에서 Behavior = Send Messages 또는 Unity Events 사용 시 매핑
-    public void OnMove(InputValue value)
-    {
-        _moveInput = value.Get<Vector2>();
     }
 
     /// <summary>
