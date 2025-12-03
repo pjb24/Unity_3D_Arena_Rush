@@ -13,6 +13,10 @@ Arena Rush는 소형 아레나에서 몰려오는 적 웨이브를 생존하며 
 - **플레이타임:** 3~5분
 - **개발 목적:** 기능 프로토타입, 시스템 검증, 반복 플레이 설계 테스트
 
+## 1-1. 개발 환경
+- Unity 버전: Unity 6 (6000.x LTS)
+- Render Pipeline: URP(Universal Render Pipeline) 고정
+
 ---
 
 ## **2. 핵심 컨셉**
