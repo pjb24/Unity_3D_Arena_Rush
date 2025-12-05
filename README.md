@@ -165,7 +165,7 @@ Assets/
 
 - EnemyChaser.cs
 - EnemyShooter.cs
-- EnemySpawner.cs
+- EnemySpawnManager.cs
 
 ### **Wave**
 

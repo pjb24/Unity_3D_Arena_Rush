@@ -102,7 +102,7 @@ public class PlayerController : MonoBehaviour
 
     private void OnDamaged(DamageInfo info, int currentHP)
     {
-        Debug.Log("Player Damaged. "
+        Debug.Log(gameObject.name + " Damaged. "
             + "DamageAmount: " + info.amount
             + ", " + "DamageType: " + info.type
             + ", " + "Attacker: " + info.attacker

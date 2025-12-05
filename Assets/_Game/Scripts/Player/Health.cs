@@ -67,7 +67,7 @@ public class Health : MonoBehaviour
     // -----------------------------
     private event Action<DamageInfo, int> _onDamaged;      // (DamageInfo, remainingHP)
     private event Action<int, int> _onHealed;              // (healedAmount, currentHP)
-    private event Action _onDeath;                         // 사망 이벤트
+    private event Action<Health> _onDeath;                         // 사망 이벤트
 
     // 외부 등록용 메서드
     public void AddDamagedListener(Action<DamageInfo, int> listener) => _onDamaged += listener;
@@ -76,8 +76,8 @@ public class Health : MonoBehaviour
     public void AddHealedListener(Action<int, int> listener) => _onHealed += listener;
     public void RemoveHealedListener(Action<int, int> listener) => _onHealed -= listener;
 
-    public void AddDeathListener(Action listener) => _onDeath += listener;
-    public void RemoveDeathListener(Action listener) => _onDeath -= listener;
+    public void AddDeathListener(Action<Health> listener) => _onDeath += listener;
+    public void RemoveDeathListener(Action<Health> listener) => _onDeath -= listener;
 
     private Coroutine _invulnRoutine;
     private DamageInfo _lastHit;
@@ -193,7 +193,7 @@ public class Health : MonoBehaviour
         IsDead = true;
 
         // 사망 시 처리
-        _onDeath?.Invoke();
+        _onDeath?.Invoke(this);
         SetObjectsActiveOnDeath(true);
 
         if (_destroyOnDeath)
