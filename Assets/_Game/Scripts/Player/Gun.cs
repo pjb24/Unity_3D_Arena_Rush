@@ -21,7 +21,7 @@ public class Gun : MonoBehaviour
     [SerializeField, Range(0f, 15f)] private float _spreadDegrees = 1.5f; // 산탄
     [SerializeField, Range(1, 20)] private int _shotsPerFire = 1;         // 샷건성 멀티 샷
     [SerializeField, Range(5f, 150f)] private float _range = 60f;
-    [SerializeField] private float _damage = 10f;
+    [SerializeField] private int _damage = 10;
     [SerializeField] private LayerMask _hitMask = ~0;
 
     [Header("Ammo (Optional)")]
@@ -59,7 +59,7 @@ public class Gun : MonoBehaviour
     public bool IsReloading => _reloading;
     public int CurrentAmmo => _magazineSize > 0 ? _ammo : -1;
     public int MagazineSize => _magazineSize;
-    public float Damage => _damage;
+    public int Damage => _damage;
     public float FireRate => _fireRate;
     
     private void Awake()
@@ -194,18 +194,24 @@ public class Gun : MonoBehaviour
 
     private void OnHit(RaycastHit hit, Vector3 dir)
     {
-        //// 데미지 적용
-        //var h = hit.collider.GetComponentInParent<Health>();
-        //if (h != null)
-        //{
-        //    h.TakeDamage(_damage);
-        //}
+        // 데미지 적용
+        var h = hit.collider.GetComponentInParent<Health>();
+        if (h != null)
+        {
+            DamageInfo info = new();
+            info.amount = _damage;
+            info.attacker = gameObject;
+            info.type = E_DamageType.Bullet;
+            info.knockback = 5;
 
-        //// 이펙트
-        //if (_hitFxPrefab != null)
-        //{
-        //    SpawnFx(_hitFxPrefab, hit.point, Quaternion.LookRotation(hit.normal));
-        //}
+            h.TakeDamage(info);
+        }
+
+        // 이펙트
+        if (_hitFxPrefab != null)
+        {
+            SpawnFx(_hitFxPrefab, hit.point, Quaternion.LookRotation(hit.normal));
+        }
     }
 
     private void PlayMuzzleFx()

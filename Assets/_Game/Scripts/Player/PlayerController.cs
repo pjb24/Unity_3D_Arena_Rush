@@ -22,21 +22,35 @@ public class PlayerController : MonoBehaviour
     private Vector2 _moveInput;         // WASD
     private Rigidbody _rb;
 
+    private Health _health;
+
     private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
         _rb.useGravity = false;
         _rb.constraints = RigidbodyConstraints.FreezeRotation;
+
+        _health = GetComponent<Health>();
     }
 
     private void OnEnable()
     {
         if (_moveAction != null) _moveAction.action.Enable();
+
+        if (_health != null)
+        {
+            _health.AddDamagedListener(OnDamaged);
+        }
     }
 
     private void OnDisable()
     {
         if (_moveAction != null) _moveAction.action.Disable();
+
+        if (_health != null)
+        {
+            _health.RemoveDamagedListener(OnDamaged);
+        }
     }
 
     private void Update()
@@ -84,5 +98,15 @@ public class PlayerController : MonoBehaviour
             Quaternion targetRot = Quaternion.LookRotation(viewDir);
             _rb.MoveRotation(targetRot);
         }
+    }
+
+    private void OnDamaged(DamageInfo info, int currentHP)
+    {
+        Debug.Log("Player Damaged. "
+            + "DamageAmount: " + info.amount
+            + ", " + "DamageType: " + info.type
+            + ", " + "Attacker: " + info.attacker
+            + ", " + "Knockback Power: " + info.knockback
+            + ", " + "CurrentHP: " + currentHP);
     }
 }
