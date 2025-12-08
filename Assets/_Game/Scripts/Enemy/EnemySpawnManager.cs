@@ -110,11 +110,7 @@ public class EnemySpawnManager : MonoBehaviour
         }
 
         // Pool 우선 시도 → 폴백 Instantiate
-        GameObject go;
-        //if (PoolerBridge.TrySpawn(_pooler, prefab, point.position, point.rotation, out go))
-        //    return go;
-
-        go = Instantiate(prefab, point.position, point.rotation);
+        GameObject go = Pooler.Instance.Spawn(prefab, point.position, point.rotation);
 
         return go;
     }

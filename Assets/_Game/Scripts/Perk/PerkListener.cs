@@ -12,7 +12,7 @@ public class PerkListener : MonoBehaviour
     [Header("Targets (직접 참조)")]
     [SerializeField] private Gun _gun;                      // Damage, FireRate
     [SerializeField] private PlayerController _player;      // MoveSpeed
-    //[SerializeField] private Dash _dash;                    // CooldownSeconds
+    [SerializeField] private Dash _dash;                    // CooldownSeconds
     [SerializeField] private Health _health;                // MaxHP (CurrentHP는 선택)
 
     [Header("Perk")]
@@ -104,6 +104,7 @@ public class PerkListener : MonoBehaviour
             Debug.Log("Damage: " + _gun.Damage
                 + ", FireRate: " + _gun.FireRate
                 + ", MoveSpeed: " + _player.MoveSpeed
+                + ", Cooldown: " + _dash.Cooldown
                 + ", MaxHP: " + _health.MaxHP
                 + ", CurrentHP: " + _health.CurrentHP);
         }
@@ -124,8 +125,8 @@ public class PerkListener : MonoBehaviour
             _player.MoveSpeed = Mathf.Max(0f, Compose(baseMS, _mods[E_PerkStat.MoveSpeed]));
 
         // DashCooldown (감소 퍼크는 음수 AddFlat/Percent로 정의 권장)
-        //if (_dash != null && _base.TryGetValue(E_PerkStat.DashCooldown, out var baseCD))
-        //    _dash.CooldownSeconds = Mathf.Max(0f, Compose(baseCD, _mods[E_PerkStat.DashCooldown]));
+        if (_dash != null && _base.TryGetValue(E_PerkStat.DashCooldown, out var baseCD))
+            _dash.Cooldown = Mathf.Max(0f, Compose(baseCD, _mods[E_PerkStat.DashCooldown]));
 
         // MaxHP (정수 처리 + 현재 체력 정책)
         if (_health != null && _base.TryGetValue(E_PerkStat.MaxHP, out var baseHPf))

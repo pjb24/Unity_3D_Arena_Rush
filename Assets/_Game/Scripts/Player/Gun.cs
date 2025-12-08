@@ -230,18 +230,8 @@ public class Gun : MonoBehaviour
 
     private void SpawnFx(GameObject prefab, Vector3 pos, Quaternion rot)
     {
-        //// Pooler가 있으면 사용, 없으면 Instantiate
-        //var pooler = FindAnyObjectByType<Pooler>();
-        //if (pooler != null)
-        //{
-        //    var go = pooler.Spawn(prefab, pos, rot);
-        //    // fx가 자체 파괴 타이머를 가진다고 가정
-        //}
-        //else
-        //{
-        //    var go = Instantiate(prefab, pos, rot);
-        //    Destroy(go, 2f);
-        //}
+        var go = Pooler.Instance.Spawn(prefab, pos, rot);
+        // fx가 자체 파괴 타이머를 가진다고 가정
     }
 
     // ===== Aim Line =====

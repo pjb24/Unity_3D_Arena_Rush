@@ -54,7 +54,6 @@ public class Health : MonoBehaviour
     private float _invincibleDurationOnHit = 0.2f;
 
     [Header("Death Handling")]
-    [SerializeField] private bool _destroyOnDeath = false;
     [SerializeField] private GameObject[] _disableOnDeath;
 
     public int MaxHP { get { return _maxHP; } set { _maxHP = value; } }
@@ -200,14 +199,7 @@ public class Health : MonoBehaviour
         _onDeath?.Invoke(this);
         SetObjectsActiveOnDeath(true);
 
-        if (_destroyOnDeath)
-        {
-            Destroy(gameObject);
-        }
-        else
-        {
-            gameObject.SetActive(false); // 파괴 대신 비활성 선택지
-        }
+        Pooler.Instance.Despawn(gameObject);
     }
 
     private void SetObjectsActiveOnDeath(bool die)
@@ -218,7 +210,6 @@ public class Health : MonoBehaviour
         {
             if (_disableOnDeath[i] == null) continue;
 
-            // onDeath == true(사망 시)
             _disableOnDeath[i].SetActive(!die);
         }
     }
