@@ -58,6 +58,9 @@ public class EnemyChaser : MonoBehaviour
     [SerializeField] private float _gravity = -30f;         // 탑다운이라면 0으로 설정 가능
     [SerializeField] private bool _freezeXZRotation = true;
 
+    [Header("Debug")]
+    [SerializeField] private bool _logDamage = false;
+
     // Cache
     private NavMeshAgent _agent;
     private Health _targetHealth;
@@ -439,12 +442,15 @@ public class EnemyChaser : MonoBehaviour
 
     private void OnDamaged(DamageInfo info, int currentHP)
     {
-        Debug.Log(gameObject.name + " Damaged. "
-            + "DamageAmount: " + info.amount
-            + ", " + "DamageType: " + info.type
-            + ", " + "Attacker: " + info.attacker
-            + ", " + "Knockback Power: " + info.knockback
-            + ", " + "CurrentHP: " + currentHP);
+        if (_logDamage)
+        {
+            Debug.Log(gameObject.name + " Damaged. "
+                + "DamageAmount: " + info.amount
+                + ", " + "DamageType: " + info.type
+                + ", " + "Attacker: " + info.attacker
+                + ", " + "Knockback Power: " + info.knockback
+                + ", " + "CurrentHP: " + currentHP);
+        }
 
         ApplyKnockback(info.attacker.transform.position, info.knockback, 0.5f);
     }

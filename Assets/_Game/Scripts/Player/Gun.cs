@@ -51,7 +51,7 @@ public class Gun : MonoBehaviour
     private bool _triggerReleased = true;     // 단발 트리거 제어
     private int _ammo;                        // 현재 탄 수
     private bool _reloading;
-    
+
     private LineRenderer _line;
     private float _prevAimLineWidth;
 
@@ -59,9 +59,9 @@ public class Gun : MonoBehaviour
     public bool IsReloading => _reloading;
     public int CurrentAmmo => _magazineSize > 0 ? _ammo : -1;
     public int MagazineSize => _magazineSize;
-    public int Damage => _damage;
-    public float FireRate => _fireRate;
-    
+    public int Damage { get { return _damage; } set { _damage = value; } }
+    public float FireRate { get { return _fireRate; } set { _fireRate = value; } }
+
     private void Awake()
     {
         if (_magazineSize > 0) _ammo = _magazineSize;
@@ -276,7 +276,7 @@ public class Gun : MonoBehaviour
     {
         if (_line == null) return;
 
-        if (_prevAimLineWidth !=  _aimLineWidth)
+        if (_prevAimLineWidth != _aimLineWidth)
         {
             _line.startWidth = _aimLineWidth;
             _line.endWidth = _aimLineWidth;

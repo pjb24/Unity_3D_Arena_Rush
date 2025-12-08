@@ -57,8 +57,8 @@ public class Health : MonoBehaviour
     [SerializeField] private bool _destroyOnDeath = false;
     [SerializeField] private GameObject[] _disableOnDeath;
 
-    public int MaxHP => _maxHP;
-    public int CurrentHP => _currentHP;
+    public int MaxHP { get { return _maxHP; } set { _maxHP = value; } }
+    public int CurrentHP { get { return _currentHP; } set { _currentHP = value; } }
     public bool IsDead { get; private set; }
     public bool IsInvulnerable { get; private set; }
 

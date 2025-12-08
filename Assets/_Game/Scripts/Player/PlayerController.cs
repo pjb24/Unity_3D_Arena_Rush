@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Move")]
     [SerializeField, Range(0.5f, 20f)] private float _moveSpeed = 6f;
+    public float MoveSpeed { get { return _moveSpeed; } set { _moveSpeed = value; } }
 
     // 카메라 Transform을 Inspector에서 연결
     [Header("Camera Reference")]
@@ -17,6 +18,9 @@ public class PlayerController : MonoBehaviour
 
     [Header("Input")]
     public InputActionReference _moveAction;    // Vector2(WASD)
+
+    [Header("Debug")]
+    [SerializeField] private bool _logDamage = false;
 
     // runtime
     private Vector2 _moveInput;         // WASD
@@ -102,11 +106,14 @@ public class PlayerController : MonoBehaviour
 
     private void OnDamaged(DamageInfo info, int currentHP)
     {
-        Debug.Log(gameObject.name + " Damaged. "
-            + "DamageAmount: " + info.amount
-            + ", " + "DamageType: " + info.type
-            + ", " + "Attacker: " + info.attacker
-            + ", " + "Knockback Power: " + info.knockback
-            + ", " + "CurrentHP: " + currentHP);
+        if (_logDamage)
+        {
+            Debug.Log(gameObject.name + " Damaged. "
+                + "DamageAmount: " + info.amount
+                + ", " + "DamageType: " + info.type
+                + ", " + "Attacker: " + info.attacker
+                + ", " + "Knockback Power: " + info.knockback
+                + ", " + "CurrentHP: " + currentHP);
+        }
     }
 }

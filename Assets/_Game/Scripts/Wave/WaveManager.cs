@@ -21,6 +21,13 @@ public class WaveManager : MonoBehaviour
     [SerializeField, Min(0)] private int _alive = 0;
     [SerializeField] private bool _running;
 
+    private bool _selectPerkFlag = false;
+
+    public void SetSelectPerk()
+    {
+        _selectPerkFlag = true;
+    }
+
     private event Action<int> _onWaveStarted;     // waveIndex
     private event Action<int> _onWaveCleared;     // waveIndex
     private event Action _onAllWavesCleared;
@@ -35,7 +42,7 @@ public class WaveManager : MonoBehaviour
     public void AddAllWavesClearedListener(Action listener) => _onAllWavesCleared += listener;
     public void RemoveAllWavesClearedListener(Action listener) => _onAllWavesCleared -= listener;
 
-    void Start()
+    private void Start()
     {
         if (_config == null || _config.waves.Count == 0)
         {
@@ -82,7 +89,14 @@ public class WaveManager : MonoBehaviour
             // 모두 사망할 때까지 대기
             yield return new WaitUntil(() => _alive <= 0);
 
+            Debug.Log("Wave " + _config.waves[i].name + " Cleared");
             _onWaveCleared?.Invoke(i);
+
+            if (_onWaveCleared.GetInvocationList().Length > 0)
+            {
+                yield return new WaitUntil(() => _selectPerkFlag == true);
+                _selectPerkFlag = false;
+            }
         }
 
         _running = false;
