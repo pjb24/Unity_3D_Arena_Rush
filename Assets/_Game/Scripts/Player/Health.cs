@@ -61,6 +61,10 @@ public class Health : MonoBehaviour
     public int CurrentHP { get { return _currentHP; } set { _currentHP = value; } }
     public bool IsDead { get; private set; }
     public bool IsInvulnerable { get; private set; }
+    public void SetInvulnerable(bool flag)
+    {
+        IsInvulnerable = flag;
+    }
 
     // -----------------------------
     // C# 이벤트 기반
