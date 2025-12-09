@@ -18,7 +18,9 @@ public class WaveManager : MonoBehaviour
 
     [Header("Runtime State (ReadOnly)")]
     [SerializeField, Min(0)] private int _currentWaveIndex = -1;
+    public int CurrentWave => _currentWaveIndex + 1;
     [SerializeField, Min(0)] private int _alive = 0;
+    public int AliveEnemies => _alive;
     [SerializeField] private bool _running;
 
     private bool _selectPerkFlag = false;

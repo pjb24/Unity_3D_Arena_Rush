@@ -44,6 +44,7 @@ public class Gun : MonoBehaviour
 
     [Header("Input (Optional)")]
     public InputActionReference _fireAction;       // Button
+    public InputActionReference _reloadAction;       // Button
 
     // runtime
     private bool _isFirePressed;
@@ -51,6 +52,7 @@ public class Gun : MonoBehaviour
     private bool _triggerReleased = true;     // 단발 트리거 제어
     private int _ammo;                        // 현재 탄 수
     private bool _reloading;
+    private float _reloadEndTime;             // 재장전 종료 시각
 
     private LineRenderer _line;
     private float _prevAimLineWidth;
@@ -61,6 +63,9 @@ public class Gun : MonoBehaviour
     public int MagazineSize => _magazineSize;
     public int Damage { get { return _damage; } set { _damage = value; } }
     public float FireRate { get { return _fireRate; } set { _fireRate = value; } }
+
+    // 남은 재장전 시간(s)
+    public float ReloadRemaining => _reloading ? Mathf.Max(0f, _reloadEndTime - Time.time) : 0f;
 
     private void Awake()
     {
@@ -73,11 +78,13 @@ public class Gun : MonoBehaviour
     private void OnEnable()
     {
         if (_fireAction != null) _fireAction.action.Enable();
+        if (_reloadAction != null) _reloadAction.action.Enable();
     }
 
     private void OnDisable()
     {
         if (_fireAction != null) _fireAction.action.Disable();
+        if (_reloadAction != null) _reloadAction.action.Disable();
     }
 
     private void Update()
@@ -99,6 +106,16 @@ public class Gun : MonoBehaviour
                     _triggerReleased = false;
                 }
                 if (!_isFirePressed) _triggerReleased = true;
+            }
+        }
+
+        if (_reloadAction != null)
+        {
+            bool reloadPressed = _reloadAction.action.IsPressed();
+
+            if (reloadPressed && _magazineSize != _ammo)
+            {
+                StartReload();
             }
         }
 
@@ -147,6 +164,7 @@ public class Gun : MonoBehaviour
     private IEnumerator ReloadRoutine()
     {
         _reloading = true;
+        _reloadEndTime = Time.time + _reloadTime; // 종료 시각 기록
         PlayAudio(_reloadSfx);
         yield return new WaitForSeconds(_reloadTime);
         _ammo = _magazineSize;
@@ -194,7 +212,7 @@ public class Gun : MonoBehaviour
 
     private void OnHit(RaycastHit hit, Vector3 dir)
     {
-        // 데미지 적용
+        // 대미지 적용
         var h = hit.collider.GetComponentInParent<Health>();
         if (h != null)
         {
