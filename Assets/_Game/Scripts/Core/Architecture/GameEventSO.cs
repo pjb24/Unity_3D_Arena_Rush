@@ -10,6 +10,15 @@ public class GameEventSO : ScriptableObject
 
     public void Raise()
     {
+        if (_onEventRaised == null) return;
+
+        // 죽은 UnityEngine.Object 타겟 제거
+        foreach (var d in _onEventRaised.GetInvocationList())
+        {
+            var target = d.Target as Object;
+            if (target == null) _onEventRaised -= (UnityAction)d;
+        }
+
         _onEventRaised?.Invoke();
     }
 

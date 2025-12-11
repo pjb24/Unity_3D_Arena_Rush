@@ -4248,9 +4248,9 @@ MonoBehaviour:
   _logWarnings: 1
   _drawHierarchy: 1
   _respectGameState: 1
-  _despawnAllOnRunStarted: 1
+  _despawnAllOnRunStarted: 0
   _clearInactiveOnRunStarted: 0
-  _despawnAllOnGameOver: 1
+  _despawnAllOnGameOver: 0
   _clearInactiveOnGameOver: 0
   _autoCull: 0
   _cullInterval: 10
