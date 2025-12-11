@@ -68,7 +68,7 @@ public class PlayerController : MonoBehaviour
 
         if (_health != null)
         {
-            _health.OnDamagedEvent.AddListener(OnDamaged);
+            _health.AddListenerOnDamagedEvent(OnDamaged);
             _health.OnPlayerDeathEvent.AddListener(OnPlayerDied);
         }
     }
@@ -86,7 +86,7 @@ public class PlayerController : MonoBehaviour
 
         if (_health != null)
         {
-            _health.OnDamagedEvent.RemoveListener(OnDamaged);
+            _health.RemoveListenerOnDamagedEvent(OnDamaged);
             _health.OnPlayerDeathEvent.RemoveListener(OnPlayerDied);
         }
     }

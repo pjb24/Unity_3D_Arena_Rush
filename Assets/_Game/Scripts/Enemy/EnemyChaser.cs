@@ -149,7 +149,7 @@ public class EnemyChaser : MonoBehaviour
 
         if (_health != null)
         {
-            _health.OnDamagedEvent.AddListener(OnDamaged);
+            _health.AddListenerOnDamagedEvent(OnDamaged);
         }
 
         if (_rigidbodyMove)
@@ -167,7 +167,7 @@ public class EnemyChaser : MonoBehaviour
     {
         if (_health != null)
         {
-            _health.OnDamagedEvent.RemoveListener(OnDamaged);
+            _health.RemoveListenerOnDamagedEvent(OnDamaged);
         }
 
         if (_gs != null)

@@ -18,7 +18,7 @@ MonoBehaviour:
     groups:
     - prefab: {fileID: 7534088596184383904, guid: 49ad63047a930f843a8ff9a49644161e, type: 3}
       count: 3
-      interval: 0.2
+      interval: 0.1
       startDelay: 0
     isBossWave: 0
     bossPrefab: {fileID: 0}

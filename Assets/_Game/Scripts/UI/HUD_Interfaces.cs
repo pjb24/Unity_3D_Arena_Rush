@@ -3,8 +3,8 @@
 
 public interface IHealthInfo
 {
-    public float MaxHP { get; }
-    public float CurrentHP { get; }
+    public int MaxHP { get; }
+    public int CurrentHP { get; }
 }
 
 public interface IGunInfo

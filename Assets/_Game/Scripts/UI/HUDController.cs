@@ -77,14 +77,14 @@ public class HUDController : MonoBehaviour
     {
         if (_health == null || _hpFill == null) return;
 
-        float max = Mathf.Max(1, _health.MaxHP);
-        float cur = Mathf.Clamp(_health.CurrentHP, 0, max);
-        _hpFill.fillAmount = cur / max;
+        int max = Mathf.Max(1, _health.MaxHP);
+        int cur = Mathf.Clamp(_health.CurrentHP, 0, max);
+        _hpFill.fillAmount = (float)cur / (float)max;
 
         if (_hpText != null)
         {
             _sb.Clear();
-            _sb.Append("HP ").Append((int)cur).Append(" / ").Append((int)max);
+            _sb.Append("HP ").Append(cur).Append(" / ").Append(max);
             _hpText.text = _sb.ToString();
         }
     }

@@ -4,8 +4,8 @@ public class HUD_Adapter_Health : MonoBehaviour, IHealthInfo
 {
     private Health _src;
 
-    public float MaxHP => _src != null ? _src.MaxHP : 0f;
-    public float CurrentHP => _src != null ? _src.CurrentHP : 0f;
+    public int MaxHP => _src != null ? _src.MaxHP : 0;
+    public int CurrentHP => _src != null ? _src.CurrentHP : 0;
 
     public static IHealthInfo Attach(Health src)
     {

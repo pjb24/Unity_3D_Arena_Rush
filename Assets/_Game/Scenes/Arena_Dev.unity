@@ -1551,8 +1551,6 @@ MonoBehaviour:
   OnStateChangedEvent: {fileID: 11400000, guid: b4664d45e1b6b1946bf50fa9e8234296, type: 2}
   OnRunStartedEvent: {fileID: 11400000, guid: e5e1775851b1a3641980d6cf55a46afd, type: 2}
   OnRunEndedEvent: {fileID: 11400000, guid: 7cb342aa3c5a78c41bf56fa3db8f99fa, type: 2}
-  OnWaveChangedEvent: {fileID: 11400000, guid: 69eb2700f36d87444a401014038519dc, type: 2}
-  OnEnemiesAliveChangedEvent: {fileID: 11400000, guid: a928d410b10b8004e946215cd2817afd, type: 2}
   OnPerkSelectOpenedEvent: {fileID: 11400000, guid: 9d77765754314d948bc43434b65ec847, type: 2}
   OnGameOverEvent: {fileID: 11400000, guid: 0773146bca477b742944a30ae77a7c81, type: 2}
   _dontDestroyOnLoad: 1
@@ -5297,6 +5295,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1311578447104698550, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
+      propertyPath: _magazineSize
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1487305182276590586, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
       propertyPath: m_Name
       value: Player
@@ -5346,6 +5348,10 @@ PrefabInstance:
       value: Goggles
       objectReference: {fileID: 0}
     - target: {fileID: 8133351195510891413, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
+      propertyPath: _logDamage
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8133351195510891413, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
       propertyPath: _cameraTransform
       value: 
       objectReference: {fileID: 445475433}
@@ -5353,6 +5359,10 @@ PrefabInstance:
       propertyPath: OnPlayerDiedEvent
       value: 
       objectReference: {fileID: 11400000, guid: 37f282b30246771489992eeeb78efdb6, type: 2}
+    - target: {fileID: 8931429055457635531, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
+      propertyPath: _maxHP
+      value: 100
+      objectReference: {fileID: 0}
     - target: {fileID: 8931429055457635531, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
       propertyPath: OnDeathEvent
       value: 
