@@ -147,11 +147,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08753972d91443f4f94e87337451e4ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _isPlayer: 0
   _maxHP: 100
   _currentHP: -1
   _invincibleDurationOnHit: 0
-  _destroyOnDeath: 0
   _disableOnDeath: []
+  OnDamagedEvent: {fileID: 11400000, guid: 29a27ed807c1d8c42bdd4b6722126161, type: 2}
+  OnHealedEvent: {fileID: 11400000, guid: f7e8431dd699e024db582fe72c739810, type: 2}
+  OnDeathEvent: {fileID: 11400000, guid: ff25b298df9a2b84abf1630e82cf0c99, type: 2}
+  OnPlayerDeathEvent: {fileID: 11400000, guid: c3720d2adaa782848beee30761ada914, type: 2}
+  _respectGameState: 1
+  _iFrameUseUnscaledTime: 0
 --- !u!114 &3881472346315294257
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -208,6 +214,10 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  _respectGameState: 1
+  _stopAgentWhenNotPlayable: 1
+  _resetPathWhenNotPlayable: 1
+  _useUnscaledTimeForKnockback: 0
   _drawGizmos: 1
   _rigidbodyMove: 0
   _maxSpeed: 6
@@ -216,3 +226,4 @@ MonoBehaviour:
   _faceMoveDir: 1
   _gravity: -30
   _freezeXZRotation: 1
+  _logDamage: 0

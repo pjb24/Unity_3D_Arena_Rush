@@ -10,6 +10,7 @@ using UnityEngine;
 public class EnemySpawnManager : MonoBehaviour
 {
     [Header("Spawn Points")]
+    [SerializeField] private Transform _spawnPointsContainer;     // (선택) 자식들을 자동 수집하고 싶을 때
     [SerializeField] private Transform[] _spawnPoints;
 
     [Header("Player Filter")]
@@ -19,21 +20,92 @@ public class EnemySpawnManager : MonoBehaviour
     [Header("Wave Options")]
     [SerializeField] private bool _shuffleEachWave = true;
 
-    [Header("Object Pool (Optional)")]
-    [Tooltip("Pooler 컴포넌트(싱글톤/인스턴스). 없으면 Instantiate 사용")]
-    [SerializeField] private Object _pooler; // 임의 Pooler 참조(타입 자유)
+    // ===== ScriptableObject References =====
+    [Header("Subscribe Events")]
+    [SerializeField] private GameEventSO _onRunStartedEvent;
+
+    [Header("GameState Integration")]
+    [SerializeField] private bool _respectGameState = true;          // GameState를 존중
+    [SerializeField] private bool _blockWhenNotPlayable = true;      // 비플레이 상태에서 스폰 차단
+    [SerializeField] private string _playerTag = "Player";           // 런 시작 시 재확인
+    [SerializeField] private bool _resolvePlayerOnRunStarted = true; // RunStarted에서 Player 참조 갱신
 
     private System.Random _rng;
+
+    private GameState _gs;
 
     private void Awake()
     {
         _rng = new System.Random();
+
+        // 컨테이너 기반 자동 수집(옵션)
+        if (_spawnPointsContainer != null && (_spawnPoints == null || _spawnPoints.Length == 0))
+        {
+            var list = _spawnPointsContainer.GetComponentsInChildren<Transform>(true);
+            // 자기 자신 제외
+            var tmp = new System.Collections.Generic.List<Transform>(list.Length);
+            foreach (var t in list)
+                if (t != _spawnPointsContainer) tmp.Add(t);
+            _spawnPoints = tmp.ToArray();
+        }
+
         if (_spawnPoints == null || _spawnPoints.Length == 0)
         {
-            Debug.LogWarning("[SpawnManager] 스폰 포인트가 없습니다.");
+            Debug.LogWarning("[EnemySpawnManager] 스폰 포인트가 없습니다.");
+        }
+
+        _gs = FindAnyObjectByType<GameState>();
+    }
+
+    private void OnEnable()
+    {
+        if (_onRunStartedEvent != null)
+        {
+            _onRunStartedEvent.AddListener(OnRunStarted);
+        }
+
+        // 초기 Player 없으면 한 번 시도
+        if (_player == null)
+        {
+            var p = GameObject.FindGameObjectWithTag(_playerTag);
+            if (p != null) _player = p.transform;
         }
     }
 
+    private void OnDisable()
+    {
+        if (_onRunStartedEvent != null)
+        {
+            _onRunStartedEvent.RemoveListener(OnRunStarted);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // GameState Hooks
+    // ─────────────────────────────────────────────────────────────────────────────
+    private void OnRunStarted()
+    {
+        if (_resolvePlayerOnRunStarted || _player == null)
+        {
+            var p = GameObject.FindGameObjectWithTag(_playerTag);
+            if (p != null) _player = p.transform;
+        }
+    }
+
+    private bool CanSpawnByGameState()
+    {
+        if (!_respectGameState || _gs == null) return true;
+        if (!_blockWhenNotPlayable) return true;
+        bool result = false;
+        result = _gs.IsPlayable()
+            && !_gs.IsInputLocked();
+
+        return result;
+    }
+    
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Public API
+    // ─────────────────────────────────────────────────────────────────────────────
     /// <summary>웨이브 시작 시 호출(셔플 등)</summary>
     public void InitForWave()
     {
@@ -92,25 +164,47 @@ public class EnemySpawnManager : MonoBehaviour
         // 논리상 도달 불가. 안전 폴백
         return _spawnPoints[_rng.Next(_spawnPoints.Length)];
     }
-    
-    /// <summary>스폰 실행. Pooler가 있으면 Pool Spawn, 없으면 Instantiate.</summary>
+
+    /// <summary>
+    /// 스폰 실행. Pooler가 있으면 Pool Spawn, 없으면 Instantiate.
+    /// GameState가 비플레이면 실패(null).
+    /// </summary>
     public GameObject Spawn(GameObject prefab)
     {
         if (prefab == null)
         {
-            Debug.LogWarning("[SpawnManager] 프리팹이 null 입니다.");
+            Debug.LogWarning("[EnemySpawnManager] 프리팹이 null 입니다.");
+            return null;
+        }
+
+        // 상태 체크
+        if (!CanSpawnByGameState())
+        {
+#if UNITY_EDITOR
+            // 디버깅용 로그(필요시 비활성화 가능)
+            Debug.Log($"[EnemySpawnManager] 비플레이 상태에서 스폰 차단: {_gs.CurrentState()}");
+#endif
             return null;
         }
 
         var point = PickSpawnPoint();
         if (point == null)
         {
-            Debug.LogWarning("[SpawnManager] 유효한 스폰 포인트가 없습니다");
+            Debug.LogWarning("[EnemySpawnManager] 유효한 스폰 포인트가 없습니다");
             return null;
         }
 
+        GameObject go;
         // Pool 우선 시도 → 폴백 Instantiate
-        GameObject go = Pooler.Instance.Spawn(prefab, point.position, point.rotation);
+        if (Pooler.Instance != null)
+        {
+            go = Pooler.Instance.Spawn(prefab, point.position, point.rotation);
+        }
+        else
+        {
+            Debug.Log("[EnemySpawnManager] Spawn Enemy With Instantiate Call");
+            go = Instantiate(prefab, point.position, point.rotation);
+        }
 
         return go;
     }

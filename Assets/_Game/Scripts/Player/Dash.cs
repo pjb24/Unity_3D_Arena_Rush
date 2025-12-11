@@ -24,26 +24,32 @@ public class Dash : MonoBehaviour
     [Header("Movement Backend (자동 탐색)")]
     [SerializeField] private Rigidbody _rb;
 
+    // ===== ScriptableObject References =====
+    [Header("GameState Integration")]
+    [SerializeField, Tooltip("Playing 상태에서만 대시 허용/진행")]
+    private bool _respectGameState = true;
+    [SerializeField, Tooltip("대시 진행 시간에 UnscaledTime 사용(보통 꺼둠)")]
+    private bool _useUnscaledTimeForDash = false;
+    [SerializeField, Tooltip("쿨다운에 UnscaledTime 사용(일시정지 중에도 쿨다운이 흐르게 하려면 켜기)")]
+    private bool _useUnscaledTimeForCooldown = false;
+
     [Header("Debug")]
     [SerializeField] private bool _useLegacyInputForTest = false; // Space로 테스트
     [SerializeField] private KeyCode _legacyKey = KeyCode.Space;
     [SerializeField] private bool _drawGizmos = true;
 
+    private GameState _gs;
+
     // 상태
     public bool IsDashing { get; private set; }
-    public float CooldownRemaining => Mathf.Max(0f, (_lastDashEndTime + _cooldown) - Time.time);
-
-    // 이벤트
-    private event Action _onDashStarted;
-    private event Action _onDashEnded;
-    private event Action _onDashCooldownReady;
-
-    public void AddDashStartedListener(Action listener) => _onDashStarted += listener;
-    public void RemoveDashStartedListener(Action listener) => _onDashStarted -= listener;
-    public void AddDashEndedListener(Action listener) => _onDashEnded += listener;
-    public void RemoveDashEndedListener(Action listener) => _onDashEnded -= listener;
-    public void AddDashCooldownReadyListener(Action listener) => _onDashCooldownReady += listener;
-    public void RemoveDashCooldownReadyListener(Action listener) => _onDashCooldownReady -= listener;
+    public float CooldownRemaining
+    {
+        get
+        {
+            float now = NowTimeCD;
+            return Mathf.Max(0f, (_lastDashEndTime + _cooldown) - now);
+        }
+    }
 
     // 내부
     private CapsuleCollider _capsule;
@@ -60,6 +66,11 @@ public class Dash : MonoBehaviour
     private int _selfLayer;
     private readonly bool[] _cachedIgnores = new bool[32];
 
+    // 시간 소스
+    private float DeltaTimeDash => _useUnscaledTimeForDash ? Time.unscaledDeltaTime : Time.deltaTime;
+    private float NowTimeDash => _useUnscaledTimeForDash ? Time.unscaledTime : Time.time;
+    private float NowTimeCD => _useUnscaledTimeForCooldown ? Time.unscaledTime : Time.time;
+
     private void Reset()
     {
         _rb = GetComponent<Rigidbody>();
@@ -67,6 +78,8 @@ public class Dash : MonoBehaviour
 
     private void Awake()
     {
+        _gs = FindAnyObjectByType<GameState>();
+
         if (!_rb) _rb = GetComponent<Rigidbody>();
         _capsule = GetComponent<CapsuleCollider>();
         _selfColliders = GetComponentsInChildren<Collider>(true);
@@ -79,14 +92,23 @@ public class Dash : MonoBehaviour
         // (옵션) 레거시 입력 테스트
         if (_useLegacyInputForTest && Input.GetKeyDown(_legacyKey))
         {
-            var dir = GetPlanarForwardToCursor() ?? transform.forward;
-            TryDash(dir);
+            if (CanOperateByGameState())
+            {
+                var dir = GetPlanarForwardToCursor() ?? transform.forward;
+                TryDash(dir);
+            }
         }
+
+        // 진행/쿨다운
+        bool canOperate = CanOperateByGameState();
 
         // 대시 중 이동 처리
         if (IsDashing)
         {
-            _dashT += Time.deltaTime / Mathf.Max(0.0001f, _dashDuration);
+            // 상태상 진행 금지(Perk/Pause/GameOver)면 정지 유지
+            if (!canOperate) return;
+
+            _dashT += DeltaTimeDash / Mathf.Max(0.0001f, _dashDuration);
             float t = Mathf.Clamp01(_dashT);
             float speedScale = Mathf.Max(0f, _speedCurve.Evaluate(t));
 
@@ -97,7 +119,7 @@ public class Dash : MonoBehaviour
 
             // 프레임 이동량
             float totalDist = Vector3.Distance(_dashStart, _dashTarget);
-            float idealStep = (totalDist / _dashDuration) * speedScale * Time.deltaTime;
+            float idealStep = (totalDist / _dashDuration) * speedScale * DeltaTimeDash;
             float step = Mathf.Min(idealStep, remain);
 
             if (step > 0.0001f)
@@ -115,10 +137,9 @@ public class Dash : MonoBehaviour
         else
         {
             // 쿨다운 끝났을 때 알림 1회
-            if (!_cooldownReadyFired && Time.time >= _lastDashEndTime + _cooldown)
+            if (!_cooldownReadyFired && NowTimeCD >= _lastDashEndTime + _cooldown)
             {
                 _cooldownReadyFired = true;
-                _onDashCooldownReady?.Invoke();
             }
         }
     }
@@ -130,12 +151,13 @@ public class Dash : MonoBehaviour
     public bool TryDash(Vector3 dir)
     {
         if (IsDashing) return false;
-        if (Time.time < _lastDashEndTime + _cooldown) return false;
+        if (NowTimeCD < _lastDashEndTime + _cooldown) return false;
+        if (!CanOperateByGameState()) return false;
 
         _dashDir = dir;
         _dashDir.y = 0f;
         if (_dashDir.sqrMagnitude < 0.0001f)
-        { 
+        {
             _dashDir = transform.forward; // 방향 없는 경우 전방
         }
 
@@ -144,7 +166,7 @@ public class Dash : MonoBehaviour
         _dashTarget = _dashStart + _dashDir * _dashDistance;
 
         if (_stopAtWalls)
-        { 
+        {
             _dashTarget = ComputeWallSafeTarget(_dashStart, _dashTarget);
         }
 
@@ -161,12 +183,9 @@ public class Dash : MonoBehaviour
 
         IsDashing = true;
         _dashT = 0f;
-        _onDashStarted?.Invoke();
 
-        // 이동은 Update에서 처리
+        // 종료까지 대기(Update에서 EndDash 호출)
         yield return new WaitUntil(() => !IsDashing);
-
-        // 종료 처리는 EndDash()에서 수행
     }
 
     private void EndDash()
@@ -174,9 +193,8 @@ public class Dash : MonoBehaviour
         if (!IsDashing) return;
 
         IsDashing = false;
-        _lastDashEndTime = Time.time;
+        _lastDashEndTime = NowTimeCD;
         EndDashSideEffects();
-        _onDashEnded?.Invoke();
     }
 
     private void CooldownArm()
@@ -311,7 +329,7 @@ public class Dash : MonoBehaviour
             Vector3 hit = ray.GetPoint(d);
             Vector3 dir = (hit - transform.position);
             dir.y = 0f;
-            
+
             if (dir.sqrMagnitude < 0.0001f) return null;
 
             return dir.normalized;
@@ -334,4 +352,16 @@ public class Dash : MonoBehaviour
         }
     }
 #endif
+
+    // === GameState ===
+    private bool CanOperateByGameState()
+    {
+        if (!_respectGameState) return true;
+        if (_gs == null) return true;
+        bool result = false;
+        result = _gs.IsPlayable()
+            && !_gs.IsInputLocked();
+
+        return result;
+    }
 }

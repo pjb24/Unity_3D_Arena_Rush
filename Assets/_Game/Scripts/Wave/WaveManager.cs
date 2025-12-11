@@ -7,14 +7,25 @@ using UnityEngine;
 /// 웨이브 진행/스폰/클리어 관리.
 /// - WaveConfig에 정의된 순서대로 웨이브 수행
 /// - 적 사망 카운트 기반으로 웨이브 종료 판단
-/// - 이벤트: WaveStarted / WaveCleared / AllWavesCleared
+/// - 이벤트: OnWaveStartedEvent / OnWaveClearedEvent
+///
+/// - GameState 연동 버전
+///   · 웨이브 클리어 후 GameState.PerkSelect 진입, Playing 복귀까지 대기
 /// </summary>
+
 [DisallowMultipleComponent]
 public class WaveManager : MonoBehaviour
 {
     [Header("Refs")]
     [SerializeField] private WaveConfig _config;
     [SerializeField] private EnemySpawnManager _spawner;
+
+    // ===== ScriptableObject References =====
+    [Header("ScriptableObject Events")]
+    public GameEventSO_Int OnWaveStartedEvent;        // 웨이브 시작 이벤트 (int)
+    public GameEventSO_Int OnWaveClearedEvent;        // 웨이브 클리어 이벤트 (int)
+    public GameEventSO_Int OnEnemySpawnedEvent;       // Enemy Spawn 이벤트 (int)
+    public GameEventSO_Int OnEnemyDiedEvent;       // Enemy Died 이벤트 (int)
 
     [Header("Runtime State (ReadOnly)")]
     [SerializeField, Min(0)] private int _currentWaveIndex = -1;
@@ -23,26 +34,28 @@ public class WaveManager : MonoBehaviour
     public int AliveEnemies => _alive;
     [SerializeField] private bool _running;
 
-    private bool _selectPerkFlag = false;
+    private GameState _gs;
 
-    public void SetSelectPerk()
+    private void Awake()
     {
-        _selectPerkFlag = true;
+        _gs = FindAnyObjectByType<GameState>();
     }
 
-    private event Action<int> _onWaveStarted;     // waveIndex
-    private event Action<int> _onWaveCleared;     // waveIndex
-    private event Action _onAllWavesCleared;
+    private void OnEnable()
+    {
+        if (_gs != null)
+        {
+            _gs.OnRunStartedEvent.AddListener(HandleRunStarted);
+        }
+    }
 
-    // 외부 등록용 메서드
-    public void AddWaveStartedListener(Action<int> listener) => _onWaveStarted += listener;
-    public void RemoveWaveStartedListener(Action<int> listener) => _onWaveStarted -= listener;
-
-    public void AddWaveClearedListener(Action<int> listener) => _onWaveCleared += listener;
-    public void RemoveWaveClearedListener(Action<int> listener) => _onWaveCleared -= listener;
-
-    public void AddAllWavesClearedListener(Action listener) => _onAllWavesCleared += listener;
-    public void RemoveAllWavesClearedListener(Action listener) => _onAllWavesCleared -= listener;
+    private void OnDisable()
+    {
+        if (_gs != null)
+        {
+            _gs.OnRunStartedEvent.RemoveListener(HandleRunStarted);
+        }
+    }
 
     private void Start()
     {
@@ -60,7 +73,6 @@ public class WaveManager : MonoBehaviour
                 return;
             }
         }
-        StartCoroutine(RunAllWaves());
     }
 
     public void StopAll()
@@ -78,12 +90,15 @@ public class WaveManager : MonoBehaviour
             _currentWaveIndex = i;
             var wave = _config.waves[i];
 
-            yield return new WaitForSeconds(wave.waveStartDelay);
+            if (wave.waveStartDelay > 0)
+            {
+                yield return new WaitForSeconds(wave.waveStartDelay);
+            }
 
             // 스폰 포인트 셔플 등 웨이브별 초기화
             _spawner.InitForWave();
 
-            _onWaveStarted?.Invoke(i);
+            OnWaveStartedEvent.Raise(i);
 
             // 스폰 시작
             yield return StartCoroutine(SpawnWave(wave));
@@ -92,17 +107,30 @@ public class WaveManager : MonoBehaviour
             yield return new WaitUntil(() => _alive <= 0);
 
             Debug.Log("Wave " + _config.waves[i].name + " Cleared");
-            _onWaveCleared?.Invoke(i);
+            OnWaveClearedEvent.Raise(i);
 
-            if (_onWaveCleared.GetInvocationList().Length > 0)
+            // GameState를 통한 PerkSelect → Playing 복귀까지 대기
+            if (_gs != null)
             {
-                yield return new WaitUntil(() => _selectPerkFlag == true);
-                _selectPerkFlag = false;
+                // PerkSelect 진입 대기
+                yield return new WaitUntil(() =>
+                    _gs.CurrentState() == GameStateSO.E_GamePlayState.PerkSelect ||
+                    _gs.CurrentState() == GameStateSO.E_GamePlayState.GameOver);
+
+                // 선택/확정 후 Playing 복귀 대기 (GameOver 시 루프 종료)
+                yield return new WaitUntil(() =>
+                    _gs.CurrentState() == GameStateSO.E_GamePlayState.Playing ||
+                    _gs.CurrentState() == GameStateSO.E_GamePlayState.GameOver);
+
+                if (_gs.CurrentState() == GameStateSO.E_GamePlayState.GameOver)
+                {
+                    _running = false;
+                    break;
+                }
             }
         }
 
         _running = false;
-        _onAllWavesCleared?.Invoke();
     }
 
     private IEnumerator SpawnWave(WaveConfig.WaveEntry wave)
@@ -153,23 +181,37 @@ public class WaveManager : MonoBehaviour
         var go = _spawner.Spawn(prefab);
         if (go == null) return;
 
-        _alive++;
+        _alive = Mathf.Max(0, _alive + 1);
 
-        // Health 이벤트 구독(권장)
+        // Health 이벤트 구독
         var health = go.GetComponent<Health>();
         if (health != null)
         {
-            // Health가 C# event OnDied를 제공한다고 가정
-            health.AddDeathListener(HandleEnemyDied);
+            health.OnDeathEvent.AddListener(HandleEnemyDied);
+        }
+
+        if (OnEnemySpawnedEvent != null)
+        {
+            OnEnemySpawnedEvent.Raise(_alive);
         }
     }
 
     private void HandleEnemyDied(Health health)
     {
         // 자기 자신을 즉시 구독 해제
-        health.RemoveDeathListener(HandleEnemyDied);
+        health.OnDeathEvent.RemoveListener(HandleEnemyDied);
 
         // 카운트 감소
         _alive = Mathf.Max(0, _alive - 1);
+
+        if (OnEnemyDiedEvent != null)
+        {
+            OnEnemyDiedEvent.Raise(_alive);
+        }
+    }
+
+    private void HandleRunStarted()
+    {
+        StartCoroutine(RunAllWaves());
     }
 }

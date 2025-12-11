@@ -1,5 +1,7 @@
 // PlayerController.cs
-// 입력 & 플레이어 이동(탑다운 3D) + Dash 연동
+// 입력 & 플레이어 이동(탑다운 3D) + Dash 연동 + GameState 연동
+// - GameState.IsPlayable()/IsInputLocked()에 따라 이동·대시·입력 처리 차단
+// - Health 사망 이벤트 시 GameState.TriggerGameOver()
 // 의존: PlayerInput (Unity Input System)
 // 액션 이름: "Move"(Vector2), "Dash"(Button)
 
@@ -9,6 +11,10 @@ using UnityEngine.InputSystem;
 [DisallowMultipleComponent]
 public class PlayerController : MonoBehaviour
 {
+    // ===== ScriptableObject References =====
+    [Header("ScriptableObject Events")]
+    public GameEventSO OnPlayerDiedEvent; // 플레이어 사망 이벤트
+
     [Header("Move")]
     [SerializeField, Range(0.5f, 20f)] private float _moveSpeed = 6f;
     public float MoveSpeed { get { return _moveSpeed; } set { _moveSpeed = value; } }
@@ -31,8 +37,12 @@ public class PlayerController : MonoBehaviour
     private Health _health;
     private Dash _dash;                 // Dash 컴포넌트 연동
 
+    private GameState _gs;
+
     private void Awake()
     {
+        _gs = FindAnyObjectByType<GameState>();
+
         _rb = GetComponent<Rigidbody>();
         _rb.useGravity = false;
         _rb.constraints = RigidbodyConstraints.FreezeRotation;
@@ -47,6 +57,7 @@ public class PlayerController : MonoBehaviour
 
     private void OnEnable()
     {
+        // Input
         if (_moveAction != null) _moveAction.action.Enable();
 
         if (_dashAction != null)
@@ -57,12 +68,14 @@ public class PlayerController : MonoBehaviour
 
         if (_health != null)
         {
-            _health.AddDamagedListener(OnDamaged);
+            _health.OnDamagedEvent.AddListener(OnDamaged);
+            _health.OnPlayerDeathEvent.AddListener(OnPlayerDied);
         }
     }
 
     private void OnDisable()
     {
+        // Input
         if (_moveAction != null) _moveAction.action.Disable();
 
         if (_dashAction != null)
@@ -73,17 +86,33 @@ public class PlayerController : MonoBehaviour
 
         if (_health != null)
         {
-            _health.RemoveDamagedListener(OnDamaged);
+            _health.OnDamagedEvent.RemoveListener(OnDamaged);
+            _health.OnPlayerDeathEvent.RemoveListener(OnPlayerDied);
         }
     }
 
     private void Update()
     {
+        // 입력 읽기 전 상태 확인
+        if (_gs != null
+            && (_gs.IsInputLocked() || !_gs.IsPlayable()))
+        {
+            _moveInput = Vector2.zero;
+            return;
+        }
+
         _moveInput = _moveAction != null ? _moveAction.action.ReadValue<Vector2>() : Vector2.zero;
     }
 
     private void FixedUpdate()
     {
+        // PerkSelect/Paused/GameOver 동안 이동 차단
+        if (_gs != null
+            && (_gs.IsInputLocked() || !_gs.IsPlayable()))
+        {
+            return;
+        }
+
         // 대시 중에는 수동 이동 정지(대시 스크립트가 위치 이동을 담당)
         if (_dash == null || !_dash.IsDashing)
         {
@@ -139,6 +168,11 @@ public class PlayerController : MonoBehaviour
     private void OnDashPerformed(InputAction.CallbackContext ctx)
     {
         if (_dash == null) return;
+        if (_gs != null
+            && (!_gs.IsPlayable() || _gs.IsInputLocked()))
+        {
+            return; // 게임 상태상 입력 차단
+        }
 
         // 카메라 기준 벡터
         if (_cameraTransform == null) return;
@@ -174,6 +208,14 @@ public class PlayerController : MonoBehaviour
                 + ", " + "Attacker: " + info.attacker
                 + ", " + "Knockback Power: " + info.knockback
                 + ", " + "CurrentHP: " + currentHP);
+        }
+    }
+
+    private void OnPlayerDied(Health h)
+    {
+        if (h == _health)
+        {
+            OnPlayerDiedEvent.Raise();
         }
     }
 }

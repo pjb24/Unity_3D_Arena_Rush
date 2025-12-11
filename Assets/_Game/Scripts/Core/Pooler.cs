@@ -66,6 +66,8 @@ public class Pooler : MonoBehaviour
             else DestroyImmediate(gameObject);
             return;
         }
+
+        _gs = FindAnyObjectByType<GameState>();
     }
 
     private void OnApplicationQuit()
@@ -84,6 +86,21 @@ public class Pooler : MonoBehaviour
     [SerializeField] private bool _logWarnings = true;
     [SerializeField] private bool _drawHierarchy = true;
 
+    // ─────────────────────────────────────────────────────────────────────────────
+    // GameState Integration (옵션)
+    // ─────────────────────────────────────────────────────────────────────────────
+    [Header("GameState Integration (Optional)")]
+    [SerializeField] private bool _respectGameState = false;
+    [SerializeField, Tooltip("Run 시작 때 모든 활성 인스턴스를 Despawn")] private bool _despawnAllOnRunStarted = true;
+    [SerializeField, Tooltip("Run 시작 때 비활성 풀(스택)까지 비우기")] private bool _clearInactiveOnRunStarted = false;
+    [SerializeField, Tooltip("GameOver 때 모든 활성 인스턴스를 Despawn")] private bool _despawnAllOnGameOver = true;
+    [SerializeField, Tooltip("GameOver 때 비활성 풀(스택)까지 비우기")] private bool _clearInactiveOnGameOver = false;
+
+    private GameState _gs;
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Mappings
+    // ─────────────────────────────────────────────────────────────────────────────
     // 프리팹→풀, 인스턴스→풀 매핑
     private readonly Dictionary<GameObject, Pool> _poolsByPrefab = new Dictionary<GameObject, Pool>(64);
     private readonly Dictionary<GameObject, Pool> _poolsByInstance = new Dictionary<GameObject, Pool>(512);
@@ -106,7 +123,7 @@ public class Pooler : MonoBehaviour
     public T Spawn<T>(T prefab, Vector3 pos, Quaternion rot, Transform parent = null) where T : Component
     {
         var go = Instance.SpawnInternal(prefab.gameObject, pos, rot, parent);
-        return go.GetComponent<T>();
+        return go ? go.GetComponent<T>() : null;
     }
 
     /// <summary>디스폰(즉시).</summary>
@@ -117,6 +134,11 @@ public class Pooler : MonoBehaviour
 
     /// <summary>풀 전체 간단 통계.</summary>
     public string GetStats() => Instance.GetStatsInternal();
+
+    // 선택 제공: 모든 활성/비활성 정리 API
+    public void DespawnAllActive() => Instance.DespawnAllActiveInternal();
+    public void ClearAllInactive() => Instance.ClearAllInactiveInternal();
+    public void ClearAllPoolsCompletely() => Instance.ClearAllPoolsCompletelyInternal();
 
     // ─────────────────────────────────────────────────────────────────────────────
     // Pool 구현
@@ -226,6 +248,27 @@ public class Pooler : MonoBehaviour
             }
         }
 
+        // === GameState 연동 보조 ===
+        public void FillActiveSnapshot(List<GameObject> list)
+        {
+            list.Clear();
+            foreach (var go in _active) list.Add(go);
+        }
+
+        public void DestroyAllInactive()
+        {
+            while (_inactive.Count > 0)
+            {
+                var go = _inactive.Pop();
+                Object.Destroy(go);
+            }
+        }
+
+        public void DestroyPoolRoot()
+        {
+            if (root != null) Object.Destroy(root.gameObject);
+        }
+
         public void CullExcess()
         {
             // 비활성 개수가 reserve를 초과하면 제거
@@ -289,9 +332,9 @@ public class Pooler : MonoBehaviour
         }
         else
         {
-            // 풀 소속이 아니면 일반 파괴(개발 편의)
-            if (_logWarnings) Debug.LogWarning($"[Pooler] Despawn: instance '{instance.name}' has no pool. Destroying.");
-            Destroy(instance);
+            // 풀 소속이 아니면 Inactive(개발 편의)
+            if (_logWarnings) Debug.LogWarning($"[Pooler] Despawn: instance '{instance.name}' has no pool. Inactive.");
+            instance.SetActive(false);
         }
     }
 
@@ -355,6 +398,16 @@ public class Pooler : MonoBehaviour
         {
             _cullRoutine = StartCoroutine(CullLoop());
         }
+
+        // GameState 연동
+        if (_respectGameState)
+        {
+            if (_gs != null)
+            {
+                _gs.OnRunStartedEvent.AddListener(OnRunStarted);
+                _gs.OnGameOverEvent.AddListener(OnGameOver);
+            }
+        }
     }
 
     private void OnDisable()
@@ -363,6 +416,12 @@ public class Pooler : MonoBehaviour
         {
             StopCoroutine(_cullRoutine);
             _cullRoutine = null;
+        }
+
+        if (_gs != null)
+        {
+            _gs.OnRunStartedEvent.RemoveListener(OnRunStarted);
+            _gs.OnGameOverEvent.RemoveListener(OnGameOver);
         }
     }
 
@@ -379,5 +438,70 @@ public class Pooler : MonoBehaviour
                 pool.CullExcess();
             }
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // GameState Hooks
+    // ─────────────────────────────────────────────────────────────────────────────
+    private void OnRunStarted()
+    {
+        if (!_respectGameState) return;
+
+        if (_despawnAllOnRunStarted)
+            DespawnAllActiveInternal();
+
+        if (_clearInactiveOnRunStarted)
+            ClearAllInactiveInternal();
+    }
+
+    private void OnGameOver()
+    {
+        if (!_respectGameState) return;
+
+        if (_despawnAllOnGameOver)
+            DespawnAllActiveInternal();
+
+        if (_clearInactiveOnGameOver)
+            ClearAllInactiveInternal();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Bulk Ops (활성/비활성 정리)
+    // ─────────────────────────────────────────────────────────────────────────────
+    private readonly List<GameObject> _tmpActive = new List<GameObject>(256);
+
+    private void DespawnAllActiveInternal()
+    {
+        foreach (var kv in _poolsByPrefab)
+        {
+            var pool = kv.Value;
+            pool.FillActiveSnapshot(_tmpActive);
+            for (int i = 0; i < _tmpActive.Count; i++)
+            {
+                var inst = _tmpActive[i];
+                if (inst != null) DespawnInternal(inst); // 매핑/훅 일관 처리
+            }
+        }
+        _tmpActive.Clear();
+    }
+
+    private void ClearAllInactiveInternal()
+    {
+        foreach (var kv in _poolsByPrefab)
+            kv.Value.DestroyAllInactive();
+    }
+
+    // 완전 초기화(디버그/장면 유지 재시작 시 사용)
+    private void ClearAllPoolsCompletelyInternal()
+    {
+        DespawnAllActiveInternal();
+        ClearAllInactiveInternal();
+
+        // 루트/딕셔너리 리셋
+        foreach (var kv in _poolsByPrefab)
+            kv.Value.DestroyPoolRoot();
+
+        _poolsByPrefab.Clear();
+        _poolsByInstance.Clear();
     }
 }

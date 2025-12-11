@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "WaveConfig", menuName = "ArenaRush/WaveConfig", order = 0)]
+[CreateAssetMenu(fileName = "WaveConfig", menuName = "ArenaRush SO/WaveConfig", order = 0)]
 public class WaveConfig : ScriptableObject
 {
     [Serializable]

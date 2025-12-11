@@ -1,5 +1,7 @@
 // Gun.cs
 // 히트스캔(레이캐스트) 기반 사격 시스템 통합 구현
+// - GameState.IsPlayable()/IsInputLocked()에 따라 입력/발사/재장전 차단
+//
 // - 자동/단발 모드, 연사/쿨다운, 산탄(스프레드), 탄환 수(옵션), 재장전(옵션)
 // - 조준: 플레이어(총구) forward 고정
 // - 인게임 표시: LineRenderer로 사격 거리만큼 붉은 라인 상시 업데이트
@@ -41,6 +43,7 @@ public class Gun : MonoBehaviour
     [SerializeField] private bool _showAimLine = true;
     [SerializeField, Range(0.05f, 0.5f)] private float _aimLineWidth = 0.03f;
     [SerializeField] private Color _aimLineColor = Color.red;
+    [SerializeField] private bool _hideLineWhenNotPlaying = true; // Perk/Pause/GameOver 시 비표시
 
     [Header("Input (Optional)")]
     public InputActionReference _fireAction;       // Button
@@ -57,6 +60,8 @@ public class Gun : MonoBehaviour
     private LineRenderer _line;
     private float _prevAimLineWidth;
 
+    private GameState _gs;
+
     // 상태 조회
     public bool IsReloading => _reloading;
     public int CurrentAmmo => _magazineSize > 0 ? _ammo : -1;
@@ -69,6 +74,8 @@ public class Gun : MonoBehaviour
 
     private void Awake()
     {
+        _gs = FindAnyObjectByType<GameState>();
+
         if (_magazineSize > 0) _ammo = _magazineSize;
         if (_muzzle == null) _muzzle = transform;
 
@@ -79,20 +86,34 @@ public class Gun : MonoBehaviour
     {
         if (_fireAction != null) _fireAction.action.Enable();
         if (_reloadAction != null) _reloadAction.action.Enable();
+
+        if (_gs != null)
+        {
+            _gs.OnStateChangedEvent.AddListener(OnGameStateChanged);
+        }
+        OnGameStateChanged(_gs.PreviousState(), _gs.CurrentState());
     }
 
     private void OnDisable()
     {
         if (_fireAction != null) _fireAction.action.Disable();
         if (_reloadAction != null) _reloadAction.action.Disable();
+
+        if (_gs != null)
+        {
+            _gs.OnStateChangedEvent.RemoveListener(OnGameStateChanged);
+        }
     }
 
     private void Update()
     {
+        bool playable = _gs == null
+            || (_gs.IsPlayable() && !_gs.IsInputLocked());
+
         // 입력 처리
         if (_fireAction != null)
         {
-            _isFirePressed = _fireAction.action.IsPressed();
+            _isFirePressed = playable && _fireAction.action.IsPressed();
 
             if (_fireMode == E_FireMode.FullAuto)
             {
@@ -109,7 +130,7 @@ public class Gun : MonoBehaviour
             }
         }
 
-        if (_reloadAction != null)
+        if (_reloadAction != null && playable)
         {
             bool reloadPressed = _reloadAction.action.IsPressed();
 
@@ -120,12 +141,16 @@ public class Gun : MonoBehaviour
         }
 
         // 사격 라인 상시 갱신
-        if (_showAimLine) UpdateAimLine();
+        if (_showAimLine) UpdateAimLine(playable);
     }
 
     // 외부에서 발사 요청 시 사용
     public bool TryFire()
     {
+        // 상태/재장전/쿨다운/탄약 체크
+        if (_gs != null
+            && (!_gs.IsPlayable() || _gs.IsInputLocked()))
+            return false;
         if (_reloading) return false;
 
         float t = Time.time;
@@ -157,6 +182,9 @@ public class Gun : MonoBehaviour
 
     public void StartReload()
     {
+        if (_gs != null
+            && (!_gs.IsPlayable() || _gs.IsInputLocked()))
+            return;
         if (_magazineSize <= 0 || _reloading || _ammo == _magazineSize) return;
         StartCoroutine(ReloadRoutine());
     }
@@ -280,9 +308,18 @@ public class Gun : MonoBehaviour
         _line.enabled = true;
     }
 
-    void UpdateAimLine()
+    void UpdateAimLine(bool playable)
     {
         if (_line == null) return;
+
+        // 상태에 따라 표시 제어
+        if (_hideLineWhenNotPlaying && _gs != null)
+        {
+            bool show = _gs.IsPlayable()
+                && !_gs.IsInputLocked();
+            if (_line.enabled != show) _line.enabled = show;
+            if (!show) return;
+        }
 
         if (_prevAimLineWidth != _aimLineWidth)
         {
@@ -302,5 +339,23 @@ public class Gun : MonoBehaviour
 
         _line.SetPosition(0, start);
         _line.SetPosition(1, end);
+    }
+
+    // ===== GameState Hooks =====
+    private void OnGameStateChanged(GameStateSO.E_GamePlayState prev, GameStateSO.E_GamePlayState current)
+    {
+        // 퍼크 선택/일시정지/게임오버 진입 시 트리거/연사 상태 초기화
+        if (current != GameStateSO.E_GamePlayState.Playing)
+        {
+            _isFirePressed = false;
+            _triggerReleased = true;
+        }
+
+        // 조준 라인 즉시 표시/비표시 반영 (UpdateAimLine에서도 보호)
+        if (_hideLineWhenNotPlaying && _line != null)
+        {
+            bool show = current == GameStateSO.E_GamePlayState.Playing;
+            _line.enabled = show && _showAimLine;
+        }
     }
 }

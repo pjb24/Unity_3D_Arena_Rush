@@ -31,7 +31,7 @@ public struct PerkEffect
     public float value;
 }
 
-[CreateAssetMenu(menuName = "ArenaRush/Perk", fileName = "Perk_")]
+[CreateAssetMenu(fileName = "Perk_", menuName = "ArenaRush SO/Perk")]
 public class Perk : ScriptableObject
 {
     [Header("Meta")]

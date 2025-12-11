@@ -3,9 +3,7 @@
 // - Max/Current HP, Heal/Damage/Kill/Revive
 // - 피격 후 짧은 무적(i-Frame) 옵션
 // - OnDamaged / OnHealed / OnDeath 이벤트
-// - 데미지 / 치유 / 사망 이벤트를 C# delegate 방식으로 제공
 // - 사망 시 비활성/파괴 옵션
-// 사용 예) GetComponent<Health>().TakeDamage(new DamageInfo(10, attacker: gameObject));
 
 using System;
 using System.Collections;
@@ -45,6 +43,10 @@ public struct DamageInfo
 [DisallowMultipleComponent]
 public class Health : MonoBehaviour
 {
+    [Header("Player Check")]
+    [Tooltip("Player에 부착된 Health 일 때 True로 설정.")]
+    [SerializeField] private bool _isPlayer = false;
+
     [Header("HP")]
     [SerializeField] private int _maxHP = 100;
     [SerializeField] private int _currentHP = -1; // -1이면 OnEnable 시 Max로 채움
@@ -56,6 +58,22 @@ public class Health : MonoBehaviour
     [Header("Death Handling")]
     [SerializeField] private GameObject[] _disableOnDeath;
 
+    // ===== ScriptableObject References =====
+    [Header("ScriptableObject Events")]
+    public GameEventSO_DamageInfo_Int OnDamagedEvent;    // (DamageInfo, remainingHP)
+    public GameEventSO_Int_Int OnHealedEvent;   // (healedAmount, currentHP)
+    public GameEventSO_Health OnDeathEvent;    // 사망 이벤트
+    public GameEventSO_Health OnPlayerDeathEvent;    // 사망 이벤트
+
+    [Header("GameState Integration")]
+    [Tooltip("Playing 상태에서만 데미지 처리. Perk/Pause/GameOver 동안 무적 취급.")]
+    [SerializeField] private bool _respectGameState = true;
+
+    [Tooltip("i-Frame을 TimeScale과 무관하게 흘려보낼지 여부(Perk/Pause 중에도 경과).")]
+    [SerializeField] private bool _iFrameUseUnscaledTime = false;
+
+    private GameState _gs;
+
     public int MaxHP { get { return _maxHP; } set { _maxHP = value; } }
     public int CurrentHP { get { return _currentHP; } set { _currentHP = value; } }
     public bool IsDead { get; private set; }
@@ -65,25 +83,13 @@ public class Health : MonoBehaviour
         IsInvulnerable = flag;
     }
 
-    // -----------------------------
-    // C# 이벤트 기반
-    // -----------------------------
-    private event Action<DamageInfo, int> _onDamaged;      // (DamageInfo, remainingHP)
-    private event Action<int, int> _onHealed;              // (healedAmount, currentHP)
-    private event Action<Health> _onDeath;                         // 사망 이벤트
-
-    // 외부 등록용 메서드
-    public void AddDamagedListener(Action<DamageInfo, int> listener) => _onDamaged += listener;
-    public void RemoveDamagedListener(Action<DamageInfo, int> listener) => _onDamaged -= listener;
-
-    public void AddHealedListener(Action<int, int> listener) => _onHealed += listener;
-    public void RemoveHealedListener(Action<int, int> listener) => _onHealed -= listener;
-
-    public void AddDeathListener(Action<Health> listener) => _onDeath += listener;
-    public void RemoveDeathListener(Action<Health> listener) => _onDeath -= listener;
-
     private Coroutine _invulnRoutine;
     private DamageInfo _lastHit;
+
+    private void Awake()
+    {
+        _gs = FindAnyObjectByType<GameState>();
+    }
 
     private void OnEnable()
     {
@@ -123,7 +129,7 @@ public class Health : MonoBehaviour
 
         if (healed > 0)
         {
-            _onHealed?.Invoke(healed, _currentHP);
+            OnHealedEvent.Raise(healed, _currentHP);
         }
 
         return healed;
@@ -135,13 +141,20 @@ public class Health : MonoBehaviour
     /// <summary>데미지 처리(무적/사망 처리 포함). 성공 여부 반환.</summary>
     public bool TakeDamage(DamageInfo info)
     {
+        // GameState 정책 적용: Playing + 입력잠금 아님일 때만 허용
+        if (_respectGameState)
+        {
+            if (_gs != null && (!_gs.IsPlayable() || _gs.IsInputLocked()))
+                return false;
+        }
+
         if (IsDead || IsInvulnerable || info.amount <= 0)
             return false;
 
         _lastHit = info;
 
         _currentHP = Mathf.Max(0, _currentHP - info.amount);
-        _onDamaged?.Invoke(info, _currentHP);
+        OnDamagedEvent.Raise(info, _currentHP);
 
         if (_currentHP == 0)
         {
@@ -196,10 +209,21 @@ public class Health : MonoBehaviour
         IsDead = true;
 
         // 사망 시 처리
-        _onDeath?.Invoke(this);
+        if (_isPlayer)
+        {
+            OnPlayerDeathEvent.Raise(this);
+        }
+        else
+        {
+            OnDeathEvent.Raise(this);
+        }
         SetObjectsActiveOnDeath(true);
 
-        Pooler.Instance.Despawn(gameObject);
+        // Pooler 사용 환경/정책에 따라 null 체크
+        if (Pooler.Instance != null)
+            Pooler.Instance.Despawn(gameObject);
+        else
+            gameObject.SetActive(false);
     }
 
     private void SetObjectsActiveOnDeath(bool die)
@@ -220,7 +244,18 @@ public class Health : MonoBehaviour
     private IEnumerator Co_Invulnerable(float duration)
     {
         IsInvulnerable = true;
-        yield return new WaitForSeconds(duration);
+        
+        if (_iFrameUseUnscaledTime)
+        {
+            float end = Time.unscaledTime + duration;
+            while (Time.unscaledTime < end)
+                yield return null;
+        }
+        else
+        {
+            // PerkSelect/Paused(TimeScale=0)에서는 경과하지 않음
+            yield return new WaitForSeconds(duration);
+        }
 
         IsInvulnerable = false;
         _invulnRoutine = null;

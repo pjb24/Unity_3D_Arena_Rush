@@ -15,13 +15,6 @@ public class PerkListener : MonoBehaviour
     [SerializeField] private Dash _dash;                    // CooldownSeconds
     [SerializeField] private Health _health;                // MaxHP (CurrentHP는 선택)
 
-    [Header("Perk")]
-    [SerializeField] private PerkUI _perkUI;
-
-    // --- 내부 상태 ---
-    private readonly Dictionary<E_PerkStat, StatBucket> _mods = new Dictionary<E_PerkStat, StatBucket>(8);
-    private readonly Dictionary<E_PerkStat, float> _base = new Dictionary<E_PerkStat, float>(8);
-
     // 체력 회복 정책 옵션(선택 적용)
     [Header("HP Policy")]
     [Tooltip("MaxHP 상승 시 현재 체력도 함께 비율 보정할지 여부, False로 하면 MaxHP 증가량 만큼 CurrentHP를 증가.")]
@@ -30,36 +23,84 @@ public class PerkListener : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool _logPerkState = false;
 
+    // --- 내부 상태 ---
+    private readonly Dictionary<E_PerkStat, StatBucket> _mods = new Dictionary<E_PerkStat, StatBucket>(8);
+    private readonly Dictionary<E_PerkStat, float> _base = new Dictionary<E_PerkStat, float>(8);
+
+    private GameState _gs;
+    private PerkUI _perkUI;
+
     private void Awake()
     {
-        // 버킷 초기화
+        _gs = FindAnyObjectByType<GameState>();
+        _perkUI = FindAnyObjectByType<PerkUI>();
+
+        InitBuckets();
+        CaptureBases();
+    }
+
+    private void OnEnable()
+    {
+        if (_perkUI != null)
+        {
+            _perkUI.OnPerkAppliedEvent.AddListener(ApplyPerk);
+        }
+
+        if (_gs != null)
+        {
+            _gs.OnRunStartedEvent.AddListener(OnRunStarted);
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (_perkUI != null)
+        {
+            _perkUI.OnPerkAppliedEvent.RemoveListener(ApplyPerk);
+        }
+
+        if (_gs != null)
+        {
+            _gs.OnRunStartedEvent.RemoveListener(OnRunStarted);
+        }
+    }
+
+    // === GameState 연동: 런 시작 시 초기화 ===
+    private void OnRunStarted()
+    {
+        InitBuckets();
+        CaptureBases();
+        RecalculateAll();
+        if (_logPerkState) Debug.Log("[PerkListener] RunStarted → reset mods & recapture base.");
+    }
+
+    // 버킷 초기화
+    private void InitBuckets()
+    {
+        _mods.Clear();
         foreach (E_PerkStat s in Enum.GetValues(typeof(E_PerkStat)))
             _mods[s] = StatBucket.Default();
+    }
 
-        // 기본값 캡처
+    // 기본값 캡처
+    private void CaptureBases()
+    {
+        _base.Clear();
+
         if (_gun != null)
         {
             _base[E_PerkStat.Damage] = _gun.Damage;
             _base[E_PerkStat.FireRate] = _gun.FireRate;
         }
+
         if (_player != null)
             _base[E_PerkStat.MoveSpeed] = _player.MoveSpeed;
 
-        //if (_dash != null)
-        //    _base[E_PerkStat.DashCooldown] = _dash.CooldownSeconds;
+        if (_dash != null)
+            _base[E_PerkStat.DashCooldown] = _dash.Cooldown;
 
         if (_health != null)
             _base[E_PerkStat.MaxHP] = _health.MaxHP;
-    }
-
-    private void OnEnable()
-    {
-        _perkUI.AddPerkAppliedListener(ApplyPerk);
-    }
-
-    private void OnDisable()
-    {
-        _perkUI.RemovePerkAppliedListener(ApplyPerk);
     }
 
     private void ApplyPerk(Perk perk)
@@ -71,7 +112,6 @@ public class PerkListener : MonoBehaviour
             if (!_mods.TryGetValue(e.stat, out var bucket))
             {
                 bucket = StatBucket.Default();
-                _mods[e.stat] = bucket;
             }
 
             switch (e.op)

@@ -1,13 +1,22 @@
+/// <summary>
+/// Arena Rush – Perk 선택 UI (GameState 연동)
+/// 
+/// 웨이브 종료 시 퍼크 3종을 제시하고 선택을 브로드캐스트.
+/// 실제 스탯 반영은 다른 시스템이 OnPerkAppliedEvent를 구독해 처리.
+/// 
+/// - GameState.OnPerkSelectOpenedEvent 로 오픈
+/// - GameState.OnStateChangedEvent 로 상태 이탈 시 자동 닫힘
+/// - OnPerkSelectConfirmedEvent 브로드캐스트 → GameState.HandlePerkSelectConfirmed()
+/// - Time.timeScale 제어는 GameState가 수행 (UI는 패널 표시만)
+/// </summary>
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// 웨이브 종료 시 퍼크 3종을 제시하고 선택을 브로드캐스트.
-/// 실제 스탯 반영은 다른 시스템이 OnPerkApplied를 구독해 처리.
-/// </summary>
+[DisallowMultipleComponent]
 public class PerkUI : MonoBehaviour
 {
     [Header("Database")]
@@ -22,26 +31,24 @@ public class PerkUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI[] _optionDescs = new TextMeshProUGUI[3];
 
     [Header("Behavior")]
-    [Tooltip("표시 중 게임 일시정지")]
-    [SerializeField] private bool _pauseOnOpen = true;
-
     [Tooltip("같은 세션에서 동일 퍼크 완전 배제(스택 불허)")]
     [SerializeField] private bool _preventExactDuplicate = false;
 
-    [Tooltip("웨이브 종료 이벤트 구독용")]
-    [SerializeField] private WaveManager _waveManager;
-
-    private event Action<Perk> _onPerkApplied;
-    public void AddPerkAppliedListener(Action<Perk> listener) => _onPerkApplied += listener;
-    public void RemovePerkAppliedListener(Action<Perk> listener) => _onPerkApplied -= listener;
+    [Header("ScriptableObject Events")]
+    public GameEventSO OnPerkSelectConfirmedEvent;    // Perk 선택 확정 이벤트
+    public GameEventSO_Perk OnPerkAppliedEvent;    // Perk 선택 효과 적용 이벤트
 
     private readonly System.Random _rng = new System.Random();
     private readonly List<Perk> _sessionTaken = new List<Perk>(32);
     private readonly Perk[] _current = new Perk[3];
-    private float _prevTimeScale = 1f;
+
+    private GameState _gs;
 
     private void Awake()
     {
+        _gs = FindAnyObjectByType<GameState>();
+
+        // 패널 비활성
         if (_panel != null)
         {
             _panel.alpha = 0f;
@@ -49,24 +56,55 @@ public class PerkUI : MonoBehaviour
             _panel.blocksRaycasts = false;
         }
 
+        // 버튼 리스너
         for (int i = 0; i < _optionButtons.Length; i++)
         {
             var idx = i;
-            _optionButtons[i].onClick.AddListener(() => Select(idx));
+            if (_optionButtons[i] != null)
+            {
+                _optionButtons[i].onClick.AddListener(() => Select(idx));
+            }
         }
-
-        _waveManager.AddWaveClearedListener(Open);
     }
 
-    public void Open(int waveIndex = -1)
+    private void OnEnable()
+    {
+        if (_gs != null)
+        {
+            // PerkSelect 진입 시 열기
+            _gs.OnPerkSelectOpenedEvent.AddListener(HandlePerkSelectOpened);
+            // 상태 변화 감시: PerkSelect 벗어나면 닫기(Playing/GameOver/Paused 등)
+            _gs.OnStateChangedEvent.AddListener(HandleStateChanged);
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (_gs != null)
+        {
+            // PerkSelect 진입 시 열기
+            _gs.OnPerkSelectOpenedEvent.RemoveListener(HandlePerkSelectOpened);
+            // 상태 변화 감시: PerkSelect 벗어나면 닫기(Playing/GameOver/Paused 등)
+            _gs.OnStateChangedEvent.RemoveListener(HandleStateChanged);
+        }
+    }
+
+    // === GameState Hooks ===
+    private void HandlePerkSelectOpened()
     {
         Open();
+    }
+
+    private void HandleStateChanged(GameStateSO.E_GamePlayState prev, GameStateSO.E_GamePlayState current)
+    {
+        if (current != GameStateSO.E_GamePlayState.PerkSelect)
+            SetPanel(false);
     }
 
     /// <summary>
     /// 외부에서 호출: 웨이브 종료 등 트리거에 바인딩.
     /// </summary>
-    public void Open()
+    private void Open()
     {
         if (_allPerks == null || _allPerks.Length == 0)
         {
@@ -76,12 +114,6 @@ public class PerkUI : MonoBehaviour
 
         RollOptions();
         BindUI();
-
-        if (_pauseOnOpen)
-        {
-            _prevTimeScale = Time.timeScale;
-            Time.timeScale = 0f;
-        }
 
         SetPanel(true);
     }
@@ -105,30 +137,22 @@ public class PerkUI : MonoBehaviour
         }
 
         // 브로드캐스트: 실제 적용은 외부 시스템이 처리
-        try
+        if (OnPerkAppliedEvent != null)
         {
-            _onPerkApplied?.Invoke(picked);
-        }
-        catch (Exception e)
-        {
-            Debug.LogException(e);
+            OnPerkAppliedEvent.Raise(picked);
         }
 
-        Close();
-
-        _waveManager.SetSelectPerk();
-    }
-
-    void Close()
-    {
-        SetPanel(false);
-        if (_pauseOnOpen)
+        if (OnPerkSelectConfirmedEvent != null)
         {
-            Time.timeScale = _prevTimeScale;
+            OnPerkSelectConfirmedEvent.Raise();
+        }
+        else
+        {
+            SetPanel(false); // 안전장치
         }
     }
 
-    void SetPanel(bool show)
+    private void SetPanel(bool show)
     {
         if (_panel == null) return;
 
@@ -137,7 +161,7 @@ public class PerkUI : MonoBehaviour
         _panel.blocksRaycasts = show;
     }
 
-    void RollOptions()
+    private void RollOptions()
     {
         var used = new HashSet<int>();
         int safety = 64;
@@ -162,30 +186,32 @@ public class PerkUI : MonoBehaviour
         }
     }
 
-    void BindUI()
+    private void BindUI()
     {
         for (int i = 0; i < _current.Length; i++)
         {
             var p = _current[i];
-            if (_optionTitles != null && i < _optionTitles.Length)
+            if (_optionTitles != null && i < _optionTitles.Length && _optionTitles[i] != null)
             {
                 _optionTitles[i].text = p != null ? p.DisplayName : "-";
             }
 
-            if (_optionDescs != null && i < _optionDescs.Length)
+            if (_optionDescs != null && i < _optionDescs.Length && _optionDescs[i] != null)
             {
                 // 상세 설명 없으면 자동 요약
-                var desc = !string.IsNullOrWhiteSpace(p.Description) ? p.Description : p.BuildCompactSummary();
+                var desc = (p != null && !string.IsNullOrWhiteSpace(p.Description))
+                    ? p.Description
+                    : (p != null ? p.BuildCompactSummary() : "");
                 _optionDescs[i].text = desc;
             }
 
-            if (_optionIcons != null && i < _optionIcons.Length)
+            if (_optionIcons != null && i < _optionIcons.Length && _optionIcons[i] != null)
             {
                 _optionIcons[i].sprite = p != null ? p.Icon : null;
                 _optionIcons[i].enabled = p != null && p.Icon != null;
             }
 
-            if (_optionButtons != null && i < _optionButtons.Length)
+            if (_optionButtons != null && i < _optionButtons.Length && _optionButtons[i] != null)
             {
                 _optionButtons[i].interactable = p != null;
             }

@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 9071840916724847130}
   - component: {fileID: 8133351195510891413}
   - component: {fileID: 8931429055457635531}
+  - component: {fileID: 6265663599496659120}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -154,9 +155,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40e655803ad3990458ecd781394cef56, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  OnPlayerDiedEvent: {fileID: 0}
   _moveSpeed: 6
   _cameraTransform: {fileID: 0}
   _moveAction: {fileID: -1680190386980627800, guid: 9e4c1d5586cdc914893548e6c606e47f, type: 3}
+  _dashAction: {fileID: 9033676267025546842, guid: 9e4c1d5586cdc914893548e6c606e47f, type: 3}
+  _logDamage: 0
 --- !u!114 &8931429055457635531
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -169,11 +173,68 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08753972d91443f4f94e87337451e4ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _isPlayer: 1
   _maxHP: 100
   _currentHP: -1
   _invincibleDurationOnHit: 0.2
-  _destroyOnDeath: 0
   _disableOnDeath: []
+  OnDamagedEvent: {fileID: 11400000, guid: 29a27ed807c1d8c42bdd4b6722126161, type: 2}
+  OnHealedEvent: {fileID: 11400000, guid: f7e8431dd699e024db582fe72c739810, type: 2}
+  OnDeathEvent: {fileID: 11400000, guid: ff25b298df9a2b84abf1630e82cf0c99, type: 2}
+  OnPlayerDeathEvent: {fileID: 11400000, guid: c3720d2adaa782848beee30761ada914, type: 2}
+  _respectGameState: 1
+  _iFrameUseUnscaledTime: 0
+--- !u!114 &6265663599496659120
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1487305182276590586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af27ea2fb16d3af43bdf628e7bfed552, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _dashDistance: 18
+  _dashDuration: 0.15
+  _cooldown: 0.8
+  _speedCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _stopAtWalls: 1
+  _setIFrameOnHealth: 1
+  _ignoreLayersDuringDash:
+    serializedVersion: 2
+    m_Bits: 1024
+  _rb: {fileID: 9071840916724847130}
+  _respectGameState: 1
+  _useUnscaledTimeForDash: 0
+  _useUnscaledTimeForCooldown: 0
+  _useLegacyInputForTest: 0
+  _legacyKey: 32
+  _drawGizmos: 1
 --- !u!1 &6521780298916469524
 GameObject:
   m_ObjectHideFlags: 0
@@ -414,7 +475,7 @@ MonoBehaviour:
   _hitMask:
     serializedVersion: 2
     m_Bits: 2560
-  _magazineSize: 0
+  _magazineSize: 10
   _reloadTime: 1.2
   _autoReload: 1
   _muzzle: {fileID: 7775448866084757840}
@@ -426,7 +487,9 @@ MonoBehaviour:
   _showAimLine: 1
   _aimLineWidth: 0.5
   _aimLineColor: {r: 1, g: 0, b: 0, a: 1}
+  _hideLineWhenNotPlaying: 1
   _fireAction: {fileID: 1120369429361536294, guid: 9e4c1d5586cdc914893548e6c606e47f, type: 3}
+  _reloadAction: {fileID: 3360308299196073318, guid: 9e4c1d5586cdc914893548e6c606e47f, type: 3}
 --- !u!82 &7319719233733287041
 AudioSource:
   m_ObjectHideFlags: 0
