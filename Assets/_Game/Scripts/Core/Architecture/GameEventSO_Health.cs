@@ -10,6 +10,15 @@ public class GameEventSO_Health : ScriptableObject
 
     public void Raise(Health value)
     {
+        if (_onEventRaised == null) return;
+
+        // 죽은 UnityEngine.Object 타겟 제거
+        foreach (var d in _onEventRaised.GetInvocationList())
+        {
+            var target = d.Target as Object;
+            if (target == null) _onEventRaised -= (UnityAction<Health>)d;
+        }
+
         _onEventRaised?.Invoke(value);
     }
 

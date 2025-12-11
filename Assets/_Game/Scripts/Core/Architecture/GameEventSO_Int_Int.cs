@@ -10,6 +10,15 @@ public class GameEventSO_Int_Int : ScriptableObject
 
     public void Raise(int value1, int value2)
     {
+        if (_onEventRaised == null) return;
+
+        // 죽은 UnityEngine.Object 타겟 제거
+        foreach (var d in _onEventRaised.GetInvocationList())
+        {
+            var target = d.Target as Object;
+            if (target == null) _onEventRaised -= (UnityAction<int, int>)d;
+        }
+
         _onEventRaised?.Invoke(value1, value2);
     }
 

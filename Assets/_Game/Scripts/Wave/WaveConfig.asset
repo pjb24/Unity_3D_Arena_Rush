@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   waves:
   - name: Wave 1
-    waveStartDelay: 1
+    waveStartDelay: 0
     groups:
-    - prefab: {fileID: 3352744809097980956, guid: 01cf38198dc8d964b96ce4440b65830c, type: 3}
+    - prefab: {fileID: 7534088596184383904, guid: 49ad63047a930f843a8ff9a49644161e, type: 3}
       count: 3
       interval: 0.2
       startDelay: 0
@@ -25,31 +25,23 @@ MonoBehaviour:
     bossCount: 0
     bossInterval: 0
   - name: Wave 2
-    waveStartDelay: 3
+    waveStartDelay: 1
     groups:
     - prefab: {fileID: 7534088596184383904, guid: 49ad63047a930f843a8ff9a49644161e, type: 3}
       count: 5
       interval: 0.1
       startDelay: 0
-    - prefab: {fileID: 7534088596184383904, guid: 49ad63047a930f843a8ff9a49644161e, type: 3}
-      count: 5
-      interval: 0.1
-      startDelay: 3
     isBossWave: 0
     bossPrefab: {fileID: 0}
     bossCount: 0
     bossInterval: 0
   - name: Wave 3
-    waveStartDelay: 3
+    waveStartDelay: 1
     groups:
     - prefab: {fileID: 3352744809097980956, guid: 01cf38198dc8d964b96ce4440b65830c, type: 3}
-      count: 5
+      count: 2
       interval: 0.1
       startDelay: 0
-    - prefab: {fileID: 3352744809097980956, guid: 01cf38198dc8d964b96ce4440b65830c, type: 3}
-      count: 5
-      interval: 0.1
-      startDelay: 3
     isBossWave: 0
     bossPrefab: {fileID: 0}
     bossCount: 0

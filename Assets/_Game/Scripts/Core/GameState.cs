@@ -21,8 +21,6 @@ public class GameState : MonoBehaviour
     public GameEventSO_StateChanged OnStateChangedEvent; // 상태 변경 이벤트
     public GameEventSO OnRunStartedEvent;             // 런 시작 이벤트
     public GameEventSO OnRunEndedEvent;               // 런 종료 이벤트
-    public GameEventSO_Int OnWaveChangedEvent;        // 웨이브 변경 이벤트 (int)
-    public GameEventSO_Int OnEnemiesAliveChangedEvent;// 잔여 적수 변경 이벤트 (int)
     public GameEventSO OnPerkSelectOpenedEvent;       // Perk 선택 화면 열림 이벤트
     public GameEventSO OnGameOverEvent;               // 게임오버 이벤트
 
@@ -103,7 +101,6 @@ public class GameState : MonoBehaviour
     {
         if (wave < 0) wave = 0;
         _gameStateData.CurrentWave = wave;
-        OnWaveChangedEvent.Raise(_gameStateData.CurrentWave);
     }
 
     /// <summary>잔여 적수 강제 설정(스폰 직후 등)</summary>
@@ -111,7 +108,6 @@ public class GameState : MonoBehaviour
     {
         if (count < 0) count = 0;
         _gameStateData.EnemiesAlive = count;
-        OnEnemiesAliveChangedEvent.Raise(_gameStateData.EnemiesAlive);
     }
 
     /// <summary>Perk 선택 화면 열기(웨이브 클리어 시 호출)</summary>

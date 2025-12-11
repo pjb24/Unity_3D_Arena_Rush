@@ -62,7 +62,6 @@ public class Health : MonoBehaviour
     [Header("ScriptableObject Events")]
     public GameEventSO_DamageInfo_Int OnDamagedEvent;    // (DamageInfo, remainingHP)
     public GameEventSO_Int_Int OnHealedEvent;   // (healedAmount, currentHP)
-    public GameEventSO_Health OnDeathEvent;    // 사망 이벤트
     public GameEventSO_Health OnPlayerDeathEvent;    // 사망 이벤트
 
     [Header("GameState Integration")]
@@ -71,6 +70,10 @@ public class Health : MonoBehaviour
 
     [Tooltip("i-Frame을 TimeScale과 무관하게 흘려보낼지 여부(Perk/Pause 중에도 경과).")]
     [SerializeField] private bool _iFrameUseUnscaledTime = false;
+
+    private Action<Health> _onDeathEvent;
+    public void AddListenerOnDeathEvent(Action<Health> listener) => _onDeathEvent += listener;
+    public void RemoveListenerOnDeathEvent(Action<Health> listener) => _onDeathEvent -= listener;
 
     private GameState _gs;
 
@@ -215,7 +218,7 @@ public class Health : MonoBehaviour
         }
         else
         {
-            OnDeathEvent.Raise(this);
+            _onDeathEvent(this);
         }
         SetObjectsActiveOnDeath(true);
 

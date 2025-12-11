@@ -1,6 +1,10 @@
 // EnemyShooter.cs
-// Arena Rush – 원거리형 적(AI + 사격)
+// Arena Rush – 원거리형 적(AI + 사격; 조준 정렬각 조건 추가)
 // - 가변 이동: NavMeshAgent 사용(있으면) / 없으면 단순 Steering 이동
+// - 감지: _aggroRange 내, 시야(LOS) 확보 시 어그로
+// - 이동: _desiredRange 유지(과접근 시 후퇴)
+// - 조준: _maxAimYawPerSec로 회전, _fireAlignAngleDeg 이하로 정렬되면 발사
+//
 // - 교전 로직: 사거리 진입 → 정지/유지 → 시선 고정 → 사격(히트스캔 또는 발사체)
 // - 사망/파괴 시 모든 코루틴 및 리스너 해제
 // 의존: (선택) NavMeshAgent, (권장) Health.cs, (선택) Pooler.cs, (선택) Projectile.cs
@@ -40,7 +44,9 @@ public class EnemyShooter : MonoBehaviour
     [Tooltip("시야 차단 레이어(벽/장애물)")]
     [SerializeField] private LayerMask _obstacleMask;
     [Tooltip("1초 동안 회전할 수 있는 최대 Yaw(수평 회전) 각도. - 시선을 얼마나 빨리 플레이어에게 고정할 수 있는지 정의.")]
-    [SerializeField, Range(0f, 60f)] private float _maxAimYawPerSec = 720f;
+    [SerializeField, Range(0f, 1080f)] private float _maxAimYawPerSec = 720f;
+    [Tooltip("정렬각 임계값")]
+    [SerializeField, Range(0.5f, 30f)] private float _fireAlignAngleDeg = 6f;
 
     [Header("Fire")]
     [SerializeField] private E_FireType _fireType = E_FireType.Hitscan;
@@ -87,7 +93,7 @@ public class EnemyShooter : MonoBehaviour
         _health = GetComponent<Health>();
         if (_health != null)
         {
-            _health.OnDeathEvent.AddListener(OnOwnerDied);
+            _health.AddListenerOnDeathEvent(OnOwnerDied);
         }
         if (_agent != null)
         {
@@ -113,12 +119,12 @@ public class EnemyShooter : MonoBehaviour
     {
         if (_aiLoop != null) StopCoroutine(_aiLoop);
         _aiLoop = null;
-        if (_health != null) _health.OnDeathEvent.RemoveListener(OnOwnerDied);
+        if (_health != null) _health.RemoveListenerOnDeathEvent(OnOwnerDied);
     }
 
     private void OnDestroy()
     {
-        if (_health != null) _health.OnDeathEvent.RemoveListener(OnOwnerDied);
+        if (_health != null) _health.RemoveListenerOnDeathEvent(OnOwnerDied);
     }
 
     private void OnOwnerDied(Health health)
@@ -160,7 +166,8 @@ public class EnemyShooter : MonoBehaviour
             if (toTarget.sqrMagnitude > 0.0001f)
             {
                 var desiredRot = Quaternion.LookRotation(toTarget.normalized, Vector3.up);
-                transform.rotation = Quaternion.RotateTowards(transform.rotation, desiredRot, _maxAimYawPerSec * Time.fixedDeltaTime);
+                transform.rotation = Quaternion.RotateTowards(
+                    transform.rotation, desiredRot, _maxAimYawPerSec * Time.fixedDeltaTime);
             }
 
             // 이동 – NavMesh 또는 단순 Steering
@@ -192,8 +199,8 @@ public class EnemyShooter : MonoBehaviour
                 StopMove();
             }
 
-            // 사격 – 쿨다운 / LOS / 워밍업
-            if (inAggro && HasLineOfSight())
+            // 사격 – 어그로 / 쿨다운 / LOS / 워밍업 / 조준정렬
+            if (inAggro && HasLineOfSight() && IsAimAligned())
             {
                 // 워밍업
                 if (_warmupDelay > 0f && (Time.time - _enterCombatTime) < _warmupDelay)
@@ -206,6 +213,19 @@ public class EnemyShooter : MonoBehaviour
                 }
             }
         }
+    }
+
+    private bool IsAimAligned()
+    {
+        // Muzzle 기준 방향과 타깃 방향 각도 비교
+        Vector3 muzzlePos = _muzzle ? _muzzle.position : transform.position + Vector3.up * 1.0f;
+        Vector3 forward = _muzzle ? _muzzle.forward : transform.forward;
+
+        Vector3 dirToTarget = (_target.position) - muzzlePos;
+        if (dirToTarget.sqrMagnitude < 0.0001f) return false;
+
+        float angle = Vector3.Angle(forward, dirToTarget.normalized);
+        return angle <= _fireAlignAngleDeg;
     }
 
     private void MoveTowards(Vector3 worldPos)
@@ -258,6 +278,9 @@ public class EnemyShooter : MonoBehaviour
     {
         for (int i = 0; i < _burstCount; i++)
         {
+            // 발사 직전에도 정렬 확인(회전 중 흔들림 대비)
+            if (!IsAimAligned()) yield break;
+
             FireOnce();
             _onFired?.Invoke();
 
@@ -310,7 +333,6 @@ public class EnemyShooter : MonoBehaviour
     private IEnumerator DrawLineFrame(Vector3 a, Vector3 b)
     {
         var lr = GetComponent<LineRenderer>();
-        bool created = false;
         if (lr == null)
         {
             lr = gameObject.AddComponent<LineRenderer>();
@@ -318,7 +340,6 @@ public class EnemyShooter : MonoBehaviour
             lr.startWidth = lr.endWidth = 0.02f;
             lr.useWorldSpace = true;
             lr.material = new Material(Shader.Find("Sprites/Default"));
-            created = true;
         }
 
         lr.enabled = true;
@@ -385,5 +406,16 @@ public class EnemyShooter : MonoBehaviour
 
         Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.25f);
         Gizmos.DrawWireSphere(transform.position, _desiredRange);
+
+        // 조준 정렬각(시각화)
+        if (_muzzle)
+        {
+            Gizmos.color = new Color(1f, 1f, 0f, 0.25f);
+            Vector3 f = _muzzle.forward;
+            Quaternion left = Quaternion.AngleAxis(+_fireAlignAngleDeg, Vector3.up);
+            Quaternion right = Quaternion.AngleAxis(-_fireAlignAngleDeg, Vector3.up);
+            Gizmos.DrawRay(_muzzle.position, (left * f) * 2f);
+            Gizmos.DrawRay(_muzzle.position, (right * f) * 2f);
+        }
     }
 }

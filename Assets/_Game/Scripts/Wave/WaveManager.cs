@@ -187,7 +187,7 @@ public class WaveManager : MonoBehaviour
         var health = go.GetComponent<Health>();
         if (health != null)
         {
-            health.OnDeathEvent.AddListener(HandleEnemyDied);
+            health.AddListenerOnDeathEvent(HandleEnemyDied);
         }
 
         if (OnEnemySpawnedEvent != null)
@@ -199,7 +199,7 @@ public class WaveManager : MonoBehaviour
     private void HandleEnemyDied(Health health)
     {
         // 자기 자신을 즉시 구독 해제
-        health.OnDeathEvent.RemoveListener(HandleEnemyDied);
+        health.RemoveListenerOnDeathEvent(HandleEnemyDied);
 
         // 카운트 감소
         _alive = Mathf.Max(0, _alive - 1);

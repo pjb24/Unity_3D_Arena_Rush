@@ -10,6 +10,15 @@ public class GameEventSO_DamageInfo_Int : ScriptableObject
 
     public void Raise(DamageInfo damageInfo, int value)
     {
+        if (_onEventRaised == null) return;
+
+        // 죽은 UnityEngine.Object 타겟 제거
+        foreach (var d in _onEventRaised.GetInvocationList())
+        {
+            var target = d.Target as Object;
+            if (target == null) _onEventRaised -= (UnityAction<DamageInfo, int>)d;
+        }
+
         _onEventRaised?.Invoke(damageInfo, value);
     }
 

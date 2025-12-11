@@ -11,6 +11,15 @@ public class GameEventSO_StateChanged : ScriptableObject
 
     public void Raise(GameStateSO.E_GamePlayState prev, GameStateSO.E_GamePlayState current)
     {
+        if (_onEventRaised == null) return;
+
+        // 죽은 UnityEngine.Object 타겟 제거
+        foreach (var d in _onEventRaised.GetInvocationList())
+        {
+            var target = d.Target as Object;
+            if (target == null) _onEventRaised -= (UnityAction<GameStateSO.E_GamePlayState, GameStateSO.E_GamePlayState>)d;
+        }
+
         _onEventRaised?.Invoke(prev, current);
     }
 
