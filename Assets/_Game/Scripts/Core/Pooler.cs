@@ -454,7 +454,7 @@ public class Pooler : MonoBehaviour
             ClearAllInactiveInternal();
     }
 
-    private void OnGameOver()
+    private void OnGameOver(GameOverInfo info)
     {
         if (!_respectGameState) return;
 

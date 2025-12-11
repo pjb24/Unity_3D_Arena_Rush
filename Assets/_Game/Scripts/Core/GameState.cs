@@ -1,5 +1,5 @@
 // GameState.cs
-// Arena Rush – 게임 루프/상태 관리자(ScriptableObject 기반)
+// Arena Rush – 게임 루프/상태 관리자
 // - GameStateSO 에셋을 통해 상태 데이터 관리
 // - GameEventSO 에셋들을 통해 상태/데이터 변경 이벤트 방송
 // - TimeScale 기반 일시정지(PerkSelect/Paused/GameOver)
@@ -9,6 +9,17 @@
 using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
+public struct GameOverInfo
+{
+    public int wave;
+    public float survivedSeconds;
+    public string reason;
+    public int bestWave;
+    public float bestSeconds;
+    public bool isNewBestWave;
+    public bool isNewBestTime;
+}
 
 [DisallowMultipleComponent]
 public class GameState : MonoBehaviour
@@ -22,10 +33,11 @@ public class GameState : MonoBehaviour
     public GameEventSO OnRunStartedEvent;             // 런 시작 이벤트
     public GameEventSO OnRunEndedEvent;               // 런 종료 이벤트
     public GameEventSO OnPerkSelectOpenedEvent;       // Perk 선택 화면 열림 이벤트
-    public GameEventSO OnGameOverEvent;               // 게임오버 이벤트
+    public GameEventSO_GameOverInfo OnGameOverEvent;               // 게임오버 이벤트
 
     // ===== Config =====
     [Header("Config")]
+    [SerializeField] private bool _autoStartOnAwake = true;
     [SerializeField] private bool _dontDestroyOnLoad = true;
     [SerializeField] private bool _useTimeScalePause = true;
     [SerializeField, Range(0f, 1f)] private float _pausedTimeScale = 0f;
@@ -41,6 +53,13 @@ public class GameState : MonoBehaviour
     private PerkUI _perkUI;
     private PlayerController _playerController;
     private WaveManager _waveManager;
+
+    private float _sessionStartTime = 0f;
+    private bool _gameOverTriggered = false;
+
+    // PlayerPrefs Keys
+    private const string _PP_BestWave = "AR_BestWave";
+    private const string _PP_BestTime = "AR_BestTime";
 
     private void Awake()
     {
@@ -83,14 +102,24 @@ public class GameState : MonoBehaviour
         _waveManager.OnEnemyDiedEvent.RemoveListener(HandleEnemyDied);
     }
 
+    private void Start()
+    {
+        if (_autoStartOnAwake)
+        {
+            StartRun(1);
+        }
+    }
+
     // ===== Public API (GameStateSO 데이터를 조작하고 이벤트 방송) =====
 
     /// <summary>런 시작. waveStart부터 진행.</summary>
     public void StartRun(int waveStart = 1)
     {
         _gameStateData.IsRunActive = true;
+        _gameOverTriggered = false;
         SetWave(waveStart);
         SetEnemiesAlive(0); // 적 수 초기화
+        _sessionStartTime = Time.time;
         ChangeState(GameStateSO.E_GamePlayState.Playing);
 
         OnRunStartedEvent.Raise();
@@ -133,12 +162,47 @@ public class GameState : MonoBehaviour
     }
 
     /// <summary>게임오버 처리</summary>
-    public void TriggerGameOver()
+    public void TriggerGameOver(string reason = "PlayerDied")
     {
+        if (_gameOverTriggered) return;
         if (_gameStateData.CurrentState == GameStateSO.E_GamePlayState.GameOver) return;
 
+        _gameOverTriggered = true;
+
+        float survived = Mathf.Max(0f, Time.time - _sessionStartTime);
+
+        // Load bests
+        int bestWave = PlayerPrefs.GetInt(_PP_BestWave, 0);
+        float bestTime = PlayerPrefs.GetFloat(_PP_BestTime, 0);
+
+        bool newBestWave = _gameStateData.CurrentWave > bestWave;
+        bool newBestTime = survived > bestTime;
+
+        if (newBestWave)
+        {
+            bestWave = _gameStateData.CurrentWave;
+            PlayerPrefs.SetInt(_PP_BestWave, bestWave);
+        }
+        if (newBestTime)
+        {
+            bestTime = survived;
+            PlayerPrefs.SetFloat(_PP_BestTime, bestTime);
+        }
+        PlayerPrefs.Save();
+
+        var info = new GameOverInfo
+        {
+            wave = _gameStateData.CurrentWave,
+            survivedSeconds = survived,
+            reason = reason,
+            bestWave = bestWave,
+            bestSeconds = bestTime,
+            isNewBestWave = newBestWave,
+            isNewBestTime = newBestTime,
+        };
+
         ChangeState(GameStateSO.E_GamePlayState.GameOver);
-        OnGameOverEvent.Raise();   // 게임오버 전용 이벤트 방송
+        OnGameOverEvent.Raise(info);   // 게임오버 전용 이벤트 방송
 
         _gameStateData.IsRunActive = false;
         OnRunEndedEvent.Raise();   // 런 종료 이벤트 방송
