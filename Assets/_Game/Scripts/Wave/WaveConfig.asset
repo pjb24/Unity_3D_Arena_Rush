@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   waves:
   - name: Wave 1
-    waveStartDelay: 0
+    waveStartDelay: 0.1
     groups:
     - prefab: {fileID: 7534088596184383904, guid: 49ad63047a930f843a8ff9a49644161e, type: 3}
-      count: 3
+      count: 4
       interval: 0.1
       startDelay: 0
     isBossWave: 0

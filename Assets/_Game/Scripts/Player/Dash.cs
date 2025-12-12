@@ -50,6 +50,14 @@ public class Dash : MonoBehaviour
             return Mathf.Max(0f, (_lastDashEndTime + _cooldown) - now);
         }
     }
+    public bool IsCooldown => CooldownRemaining > 0f;
+
+    private Action _onDashUsed;
+    public void AddListenerOnDashUsed(Action listener) => _onDashUsed += listener;
+    public void RemoveListenerOnDashUsed(Action listener) => _onDashUsed -= listener;
+    private Action _onDashReady;
+    public void AddListenerOnDashReady(Action listener) => _onDashReady += listener;
+    public void RemoveListenerOnDashReady(Action listener) => _onDashReady -= listener;
 
     // 내부
     private CapsuleCollider _capsule;

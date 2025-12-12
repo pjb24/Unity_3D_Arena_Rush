@@ -16,6 +16,8 @@ GameObject:
   - component: {fileID: 8133351195510891413}
   - component: {fileID: 8931429055457635531}
   - component: {fileID: 6265663599496659120}
+  - component: {fileID: 1534284932985982402}
+  - component: {fileID: 7264804092583994628}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -155,12 +157,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40e655803ad3990458ecd781394cef56, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OnPlayerDiedEvent: {fileID: 0}
+  OnPlayerDiedEvent: {fileID: 11400000, guid: 37f282b30246771489992eeeb78efdb6, type: 2}
   _moveSpeed: 6
   _cameraTransform: {fileID: 0}
   _moveAction: {fileID: -1680190386980627800, guid: 9e4c1d5586cdc914893548e6c606e47f, type: 3}
   _dashAction: {fileID: 9033676267025546842, guid: 9e4c1d5586cdc914893548e6c606e47f, type: 3}
-  _logDamage: 0
+  _logDamage: 1
 --- !u!114 &8931429055457635531
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -178,9 +180,6 @@ MonoBehaviour:
   _currentHP: -1
   _invincibleDurationOnHit: 0.2
   _disableOnDeath: []
-  OnDamagedEvent: {fileID: 11400000, guid: 29a27ed807c1d8c42bdd4b6722126161, type: 2}
-  OnHealedEvent: {fileID: 11400000, guid: f7e8431dd699e024db582fe72c739810, type: 2}
-  OnDeathEvent: {fileID: 11400000, guid: ff25b298df9a2b84abf1630e82cf0c99, type: 2}
   OnPlayerDeathEvent: {fileID: 11400000, guid: c3720d2adaa782848beee30761ada914, type: 2}
   _respectGameState: 1
   _iFrameUseUnscaledTime: 0
@@ -235,6 +234,37 @@ MonoBehaviour:
   _useLegacyInputForTest: 0
   _legacyKey: 32
   _drawGizmos: 1
+--- !u!114 &1534284932985982402
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1487305182276590586}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed431bd91813e0141b27fab6bcde3621, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _showDamage: 1
+  _showHeal: 1
+  _fallbackOffset: {x: 0, y: 1.6, z: 0}
+  _overrideCamera: {fileID: 0}
+--- !u!114 &7264804092583994628
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1487305182276590586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d0ab631c4c6cf743a8121878868adb9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _showDamage: 1
+  _showHeal: 1
+  _fallbackOffset: {x: 0, y: 1.6, z: 0}
 --- !u!1 &6521780298916469524
 GameObject:
   m_ObjectHideFlags: 0
@@ -248,7 +278,7 @@ GameObject:
   - component: {fileID: 5192307946058195309}
   - component: {fileID: 8014256333985379479}
   m_Layer: 8
-  m_Name: Cube
+  m_Name: Goggles
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -475,15 +505,15 @@ MonoBehaviour:
   _hitMask:
     serializedVersion: 2
     m_Bits: 2560
-  _magazineSize: 10
+  _magazineSize: 0
   _reloadTime: 1.2
   _autoReload: 1
   _muzzle: {fileID: 7775448866084757840}
   _muzzleFlash: {fileID: 3357023148142266011}
   _hitFxPrefab: {fileID: 0}
   _audioSource: {fileID: 7319719233733287041}
-  _fireSfx: {fileID: 8300000, guid: 2203773368e4340d98c114f55c2dd7fd, type: 3}
-  _reloadSfx: {fileID: 8300000, guid: eb5685b26a6494994af389a3293064e8, type: 3}
+  _fireSfx: {fileID: 8300000, guid: 4147cddceb0a93940b656b94169a181e, type: 3}
+  _reloadSfx: {fileID: 8300000, guid: ab7c645fede745a42b9d8282cc80b4ff, type: 3}
   _showAimLine: 1
   _aimLineWidth: 0.5
   _aimLineColor: {r: 1, g: 0, b: 0, a: 1}

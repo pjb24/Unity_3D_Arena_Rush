@@ -19,3 +19,12 @@ public interface IWaveInfo
     public int CurrentWave { get; }
     public int AliveEnemies { get; }
 }
+
+public interface IDashInfo
+{
+    public bool IsDashing { get; }          // 현재 대시 중 여부
+    public bool IsCooldown { get; }         // 쿨다운 중 여부
+    public float CooldownTotal { get; }     // 총 쿨다운(초)
+    public float CooldownRemaining { get; } // 남은 쿨다운(초)
+    public float CooldownPercent { get; }   // 0~1 (남은/총)
+}

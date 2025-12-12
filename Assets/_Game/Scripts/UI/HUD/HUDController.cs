@@ -11,16 +11,23 @@ public class HUDController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Transform _playerRoot;
-    [SerializeField] private MonoBehaviour _waveInfoSource;   // IWaveInfo
-    [SerializeField] private Image _hpFill;                    // type: Filled, Fill Method: Horizontal
+    [SerializeField] private MonoBehaviour _waveInfoSource; // IWaveInfo
+
+    [SerializeField] private Image _hpFill;                 // type: Filled, Fill Method: Horizontal
     [SerializeField] private TMP_Text _hpText;
-    [SerializeField] private TMP_Text _waveText;               // "Wave 3 / Left 12"
-    [SerializeField] private TMP_Text _gunText;                // "FR 6.0 / Reload 0.8s" or "FR 6.0 / Ready"
+
+    [SerializeField] private TMP_Text _waveText;            // "Wave 3 / Left 12"
+
+    [SerializeField] private TMP_Text _gunText;             // "FR 6.0 / Reload 0.8s" or "FR 6.0 / Ready"
+
+    [SerializeField] private TMP_Text _dashText;            // 텍스트 형태 사용
+    [SerializeField] private Image _dashFill;               // 게이지 사용
 
     // runtime
     private IHealthInfo _health;
     private IGunInfo _gun;
     private IWaveInfo _wave;
+    private IDashInfo _dash;
 
     private readonly System.Text.StringBuilder _sb = new System.Text.StringBuilder(64);
 
@@ -64,6 +71,14 @@ public class HUDController : MonoBehaviour
             var wm = FindAnyObjectByType<WaveManager>();
             if (wm != null) _wave = HUD_Adapter_Wave.Attach(wm);
         }
+
+        // Dash
+        _dash = _playerRoot.GetComponentInChildren<IDashInfo>();
+        if (_dash == null)
+        {
+            var dash = _playerRoot.GetComponentInChildren<Dash>();
+            if (dash != null) _dash = HUD_Adapter_Dash.Attach(dash);
+        }
     }
 
     private void Update()
@@ -71,6 +86,7 @@ public class HUDController : MonoBehaviour
         UpdateHP();
         UpdateWave();
         UpdateGun();
+        UpdateDash();
     }
 
     private void UpdateHP()
@@ -117,5 +133,26 @@ public class HUDController : MonoBehaviour
         }
 
         _gunText.text = _sb.ToString();
+    }
+
+    private void UpdateDash()
+    {
+        if (_dash == null) return;
+
+        // 텍스트형
+        if (_dashText != null)
+        {
+            if (_dash.IsCooldown)
+                _dashText.text = $"Dash {_dash.CooldownRemaining:0.0}s";
+            else
+                _dashText.text = "Dash Ready";
+        }
+
+        // 원형 게이지
+        if (_dashFill != null)
+        {
+            _dashFill.fillAmount = _dash.IsCooldown ? _dash.CooldownPercent : 0f; // 남은 비율
+            _dashFill.color = _dash.IsCooldown ? new Color(1f, 0.7f, 0.2f) : new Color(0.7f, 0.7f, 0.7f);
+        }
     }
 }
