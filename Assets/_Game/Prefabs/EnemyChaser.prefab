@@ -15,6 +15,8 @@ GameObject:
   - component: {fileID: 3956830038231844448}
   - component: {fileID: 5362658966396610113}
   - component: {fileID: 3881472346315294257}
+  - component: {fileID: -2506668304722295051}
+  - component: {fileID: -1500961159595491731}
   m_Layer: 9
   m_Name: EnemyChaser
   m_TagString: Enemy
@@ -152,9 +154,6 @@ MonoBehaviour:
   _currentHP: -1
   _invincibleDurationOnHit: 0
   _disableOnDeath: []
-  OnDamagedEvent: {fileID: 11400000, guid: 29a27ed807c1d8c42bdd4b6722126161, type: 2}
-  OnHealedEvent: {fileID: 11400000, guid: f7e8431dd699e024db582fe72c739810, type: 2}
-  OnDeathEvent: {fileID: 11400000, guid: ff25b298df9a2b84abf1630e82cf0c99, type: 2}
   OnPlayerDeathEvent: {fileID: 11400000, guid: c3720d2adaa782848beee30761ada914, type: 2}
   _respectGameState: 1
   _iFrameUseUnscaledTime: 0
@@ -227,3 +226,34 @@ MonoBehaviour:
   _gravity: -30
   _freezeXZRotation: 1
   _logDamage: 0
+--- !u!114 &-2506668304722295051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7534088596184383904}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed431bd91813e0141b27fab6bcde3621, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _showDamage: 1
+  _showHeal: 1
+  _fallbackOffset: {x: 0, y: 1.6, z: 0}
+  _overrideCamera: {fileID: 0}
+--- !u!114 &-1500961159595491731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7534088596184383904}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d0ab631c4c6cf743a8121878868adb9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _showDamage: 1
+  _showHeal: 1
+  _fallbackOffset: {x: 0, y: 1.6, z: 0}

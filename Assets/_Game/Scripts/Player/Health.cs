@@ -60,7 +60,6 @@ public class Health : MonoBehaviour
 
     // ===== ScriptableObject References =====
     [Header("ScriptableObject Events")]
-    public GameEventSO_Int_Int OnHealedEvent;   // (healedAmount, currentHP)
     public GameEventSO_Health OnPlayerDeathEvent;    // 사망 이벤트
 
     [Header("GameState Integration")]
@@ -77,6 +76,11 @@ public class Health : MonoBehaviour
     private Action<DamageInfo, int> _onDamagedEvent;    // (DamageInfo, remainingHP)
     public void AddListenerOnDamagedEvent(Action<DamageInfo, int> listener) => _onDamagedEvent += listener;
     public void RemoveListenerOnDamagedEvent(Action<DamageInfo, int> listener) => _onDamagedEvent -= listener;
+
+    private Action<int, int> _onHealedEvent;   // (healedAmount, currentHP)
+    public void AddListenerOnHealedEvent(Action<int, int> listener) => _onHealedEvent += listener;
+    public void RemoveListenerOnHealedEvent(Action<int, int> listener) => _onHealedEvent -= listener;
+
 
     private GameState _gs;
 
@@ -135,7 +139,7 @@ public class Health : MonoBehaviour
 
         if (healed > 0)
         {
-            OnHealedEvent.Raise(healed, _currentHP);
+            _onHealedEvent(healed, _currentHP);
         }
 
         return healed;
