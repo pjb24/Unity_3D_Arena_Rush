@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 6265663599496659120}
   - component: {fileID: 1534284932985982402}
   - component: {fileID: 7264804092583994628}
+  - component: {fileID: 6111839946016741600}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -180,6 +181,7 @@ MonoBehaviour:
   _currentHP: -1
   _invincibleDurationOnHit: 0.2
   _disableOnDeath: []
+  _log: 0
   OnPlayerDeathEvent: {fileID: 11400000, guid: c3720d2adaa782848beee30761ada914, type: 2}
   _respectGameState: 1
   _iFrameUseUnscaledTime: 0
@@ -265,6 +267,30 @@ MonoBehaviour:
   _showDamage: 1
   _showHeal: 1
   _fallbackOffset: {x: 0, y: 1.6, z: 0}
+--- !u!114 &6111839946016741600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1487305182276590586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05003696080530c45801f5396431d3a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _renderers:
+  - {fileID: 202347990105447378}
+  - {fileID: 5192307946058195309}
+  - {fileID: 9138222827898989333}
+  - {fileID: 9046803687970385084}
+  _mode: 0
+  _blinkInterval: 0.1
+  _blinkMinAlpha: 0.2
+  _tintColor: {r: 1, g: 1, b: 1, a: 0.35}
+  _colorProperty: _Color
+  _keyword: INVULNERABLE_ON
+  _log: 0
 --- !u!1 &6521780298916469524
 GameObject:
   m_ObjectHideFlags: 0
@@ -682,5 +708,10 @@ Transform:
 --- !u!198 &3357023148142266011 stripped
 ParticleSystem:
   m_CorrespondingSourceObject: {fileID: 5599866723876408345, guid: 581007ae094a3db4c9ffb56186e814bf, type: 3}
+  m_PrefabInstance: {fileID: 7142766019967683202}
+  m_PrefabAsset: {fileID: 0}
+--- !u!199 &9046803687970385084 stripped
+ParticleSystemRenderer:
+  m_CorrespondingSourceObject: {fileID: 2210290897366328894, guid: 581007ae094a3db4c9ffb56186e814bf, type: 3}
   m_PrefabInstance: {fileID: 7142766019967683202}
   m_PrefabAsset: {fileID: 0}

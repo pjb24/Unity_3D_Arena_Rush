@@ -223,7 +223,7 @@ public class Dash : MonoBehaviour
         // i-Frame
         if (_setIFrameOnHealth && _health != null)
         {
-            _health.SetInvulnerable(true);
+            _health.PushInvulnerableFor(_dashDuration);
         }
 
         // 레이어 충돌 무시
@@ -235,11 +235,6 @@ public class Dash : MonoBehaviour
 
     private void EndDashSideEffects()
     {
-        if (_setIFrameOnHealth && _health != null)
-        {
-            _health.SetInvulnerable(false);
-        }
-
         if (_ignoreLayersDuringDash.value != 0)
         {
             SetLayerIgnores(false);

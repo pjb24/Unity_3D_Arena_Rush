@@ -1,5 +1,5 @@
 // Health.cs
-// 체력/대미지/사망 공통 컴포넌트(플레이어/적 공용)
+// 체력/대미지/사망/무적 공통 컴포넌트(플레이어/적 공용)
 // - Max/Current HP, Heal/Damage/Kill/Revive
 // - 피격 후 짧은 무적(i-Frame) 옵션
 // - OnDamaged / OnHealed / OnDeath 이벤트
@@ -52,11 +52,14 @@ public class Health : MonoBehaviour
     [SerializeField] private int _currentHP = -1; // -1이면 OnEnable 시 Max로 채움
 
     [Header("Hit Invincibility Frame")]
-    [SerializeField, Tooltip("피격 후 무적 시간(초)")]
+    [SerializeField, Tooltip("피격 후 무적 시간(초)"), Min(0f)]
     private float _invincibleDurationOnHit = 0.2f;
 
     [Header("Death Handling")]
     [SerializeField] private GameObject[] _disableOnDeath;
+
+    [Header("Debug")]
+    [SerializeField] private bool _log = false;
 
     // ===== ScriptableObject References =====
     [Header("ScriptableObject Events")]
@@ -81,6 +84,10 @@ public class Health : MonoBehaviour
     public void AddListenerOnHealedEvent(Action<int, int> listener) => _onHealedEvent += listener;
     public void RemoveListenerOnHealedEvent(Action<int, int> listener) => _onHealedEvent -= listener;
 
+    // 무적 상태 변경 이벤트
+    private Action<bool> _onInvulnerableChangedEvent;   // (isInvulnerable)
+    public void AddListenerOnInvulnerableChanged(Action<bool> listener) => _onInvulnerableChangedEvent += listener;
+    public void RemoveListenerOnInvulnerableChanged(Action<bool> listener) => _onInvulnerableChangedEvent -= listener;
 
     private GameState _gs;
 
@@ -88,10 +95,6 @@ public class Health : MonoBehaviour
     public int CurrentHP { get { return _currentHP; } set { _currentHP = value; } }
     public bool IsDead { get; private set; }
     public bool IsInvulnerable { get; private set; }
-    public void SetInvulnerable(bool flag)
-    {
-        IsInvulnerable = flag;
-    }
 
     private Coroutine _invulnRoutine;
     private DamageInfo _lastHit;
@@ -107,7 +110,7 @@ public class Health : MonoBehaviour
             _currentHP = _maxHP;
 
         IsDead = false;
-        IsInvulnerable = false;
+        SetInvuln(false);
     }
 
     // -------------------------------------------------------------------
@@ -204,12 +207,12 @@ public class Health : MonoBehaviour
     {
         _currentHP = hp > 0 ? Mathf.Min(hp, _maxHP) : _maxHP;
         IsDead = false;
-        IsInvulnerable = false;
         if (_invulnRoutine != null)
         {
             StopCoroutine(_invulnRoutine);
             _invulnRoutine = null;
         }
+        SetInvuln(false);
         SetObjectsActiveOnDeath(false); // 부활 시 비활성 해제
     }
 
@@ -253,8 +256,8 @@ public class Health : MonoBehaviour
     // -------------------------------------------------------------------
     private IEnumerator Co_Invulnerable(float duration)
     {
-        IsInvulnerable = true;
-        
+        SetInvuln(true);
+
         if (_iFrameUseUnscaledTime)
         {
             float end = Time.unscaledTime + duration;
@@ -267,8 +270,20 @@ public class Health : MonoBehaviour
             yield return new WaitForSeconds(duration);
         }
 
-        IsInvulnerable = false;
+        SetInvuln(false);
         _invulnRoutine = null;
+    }
+
+    public void PushInvulnerableFor(float seconds = 0f)
+    {
+        if (seconds <= 0f)
+        {
+            seconds = _invincibleDurationOnHit;
+        }
+
+        if (_invulnRoutine != null) StopCoroutine(_invulnRoutine);
+
+        _invulnRoutine = StartCoroutine(Co_Invulnerable(seconds));
     }
 
     /// <summary>마지막 피격 정보 조회(히트리액션/리플레이 등에 활용).</summary>
@@ -276,5 +291,16 @@ public class Health : MonoBehaviour
     {
         info = _lastHit;
         return _lastHit.amount > 0 || _lastHit.attacker != null;
+    }
+
+    // -------------------------------------------------------------------
+    // 내부: 무적 토글 일원화(이벤트 발생 포함)
+    // -------------------------------------------------------------------
+    private void SetInvuln(bool flag)
+    {
+        if (IsInvulnerable == flag) return;
+        IsInvulnerable = flag;
+        _onInvulnerableChangedEvent?.Invoke(IsInvulnerable);
+        if (_log) Debug.Log($"[{name}] Invulnerable = {IsInvulnerable}");
     }
 }

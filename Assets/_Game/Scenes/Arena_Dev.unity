@@ -7154,6 +7154,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6111839946016741600, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
+      propertyPath: _colorProperty
+      value: _BaseColor
+      objectReference: {fileID: 0}
     - target: {fileID: 8133351195510891413, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
       propertyPath: _cameraTransform
       value: 
