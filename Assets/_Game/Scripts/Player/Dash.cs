@@ -8,6 +8,7 @@ public class Dash : MonoBehaviour
     [Header("Dash Core")]
     [SerializeField, Min(0.1f)] private float _dashDistance = 6f;
     [SerializeField, Min(0.05f)] private float _dashDuration = 0.15f;
+    public float DashDuration => _dashDuration;
     [SerializeField, Min(0f)] private float _cooldown = 0.8f;
     public float Cooldown { get { return _cooldown; } set { _cooldown = value; } }
     [Tooltip("가속/감속 곡선(시간 0~1)")]

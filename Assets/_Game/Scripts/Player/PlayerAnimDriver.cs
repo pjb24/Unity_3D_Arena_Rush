@@ -1,8 +1,8 @@
 // PlayerAnimDriver.cs
 // Arena Rush – Player Animator Driver (단일 레이어 Animator 전환 제어)
-// - Parameters: IsMoving, IsAiming, IsDead, DoHit, DoDash
+// - Parameters: IsMoving, IsAiming, IsDead, DoHit, DoDash, DashSpeedMul
 // - Health 피격/사망 이벤트 구독
-// - Dash 시작을 감지하여 DoDash 1회 트리거
+// - Dash 시작 시 DoDash 1회 트리거 + DashSpeedMul 세팅(클립이 dashDuration 안에 끝나게)
 // - Fire 입력 기반 IsAiming 제어(래치 옵션)
 // 의존: Unity Input System(선택), Health, Dash, GameState(선택)
 
@@ -25,6 +25,10 @@ public class PlayerAnimDriver : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float _aimLatchSeconds = 0.20f; // 최근 발사 유지 시간(0이면 hold만)
     [SerializeField] private bool _useVelocityForMoving = true;
 
+    [Header("Dash Timing")]
+    [SerializeField] private AnimationClip _dashClip;          // Dash 클립(길이 측정용)
+    [SerializeField] private bool _applyDashSpeedMultiplier = true;
+
     // runtime refs
     private Health _health;
     private Dash _dash;
@@ -41,6 +45,7 @@ public class PlayerAnimDriver : MonoBehaviour
     private static readonly int _hashIsDead = Animator.StringToHash("IsDead");
     private static readonly int _hashDoHit = Animator.StringToHash("DoHit");
     private static readonly int _hashDoDash = Animator.StringToHash("DoDash");
+    private static readonly int _hashDashSpeedMul = Animator.StringToHash("DashSpeedMul");
 
     private void Awake()
     {
@@ -79,6 +84,10 @@ public class PlayerAnimDriver : MonoBehaviour
             _animator.SetBool(_hashIsDead, false);
             _animator.SetBool(_hashIsMoving, false);
             _animator.SetBool(_hashIsAiming, false);
+
+            // 기본값(1배속)
+            if (_applyDashSpeedMultiplier)
+                _animator.SetFloat(_hashDashSpeedMul, 1f);
         }
     }
 
@@ -129,10 +138,30 @@ public class PlayerAnimDriver : MonoBehaviour
             bool isDashing = _dash.IsDashing;
             if (!_wasDashing && isDashing)
             {
+                if (_applyDashSpeedMultiplier)
+                    ApplyDashSpeedMultiplier();
+
                 _animator.SetTrigger(_hashDoDash);
             }
             _wasDashing = isDashing;
         }
+    }
+
+    private void ApplyDashSpeedMultiplier()
+    {
+        if (_animator == null) return;
+
+        float dashDur = Mathf.Max(0.01f, _dash.DashDuration);
+
+        float clipLen = (_dashClip != null) ? Mathf.Max(0.01f, _dashClip.length) : 0.01f;
+
+        // speedMul = clipLen / dashDur  (dashDur 안에 애니가 끝나게)
+        float speedMul = clipLen / dashDur;
+
+        // 너무 과격한 값 방지(필요 시 조정)
+        speedMul = Mathf.Clamp(speedMul, 0.1f, 5f);
+
+        _animator.SetFloat(_hashDashSpeedMul, speedMul);
     }
 
     private bool CalcIsMoving()

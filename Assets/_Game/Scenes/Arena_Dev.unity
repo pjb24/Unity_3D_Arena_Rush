@@ -7116,6 +7116,10 @@ PrefabInstance:
       propertyPath: _audioSource
       value: 
       objectReference: {fileID: 762959653}
+    - target: {fileID: 3549810317363597941, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
+      propertyPath: _dashClip
+      value: 
+      objectReference: {fileID: -203655887218126122, guid: 892f12b4065540c469cf7972c0aad3fd, type: 3}
     - target: {fileID: 5716891192824389098, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
