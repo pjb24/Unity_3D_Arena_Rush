@@ -61,16 +61,16 @@ public class Health : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool _log = false;
 
-    // ===== ScriptableObject References =====
-    [Header("ScriptableObject Events")]
-    public GameEventSO_Health OnPlayerDeathEvent;    // 사망 이벤트
-
     [Header("GameState Integration")]
     [Tooltip("Playing 상태에서만 데미지 처리. Perk/Pause/GameOver 동안 무적 취급.")]
     [SerializeField] private bool _respectGameState = true;
 
     [Tooltip("i-Frame을 TimeScale과 무관하게 흘려보낼지 여부(Perk/Pause 중에도 경과).")]
     [SerializeField] private bool _iFrameUseUnscaledTime = false;
+
+    private Action<Health> _onPlayerDeathEvent; // 사망 이벤트
+    public void AddListenerOnPlayerDeathEvent(Action<Health> listener) => _onPlayerDeathEvent += listener;
+    public void RemoveListenerOnPlayerDeathEvent(Action<Health> listener) => _onPlayerDeathEvent += listener;
 
     private Action<Health> _onDeathEvent;
     public void AddListenerOnDeathEvent(Action<Health> listener) => _onDeathEvent += listener;
@@ -224,7 +224,7 @@ public class Health : MonoBehaviour
         // 사망 시 처리
         if (_isPlayer)
         {
-            OnPlayerDeathEvent.Raise(this);
+            _onPlayerDeathEvent(this);
         }
         else
         {

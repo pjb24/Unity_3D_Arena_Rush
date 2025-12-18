@@ -45,6 +45,9 @@ public class EnemyChaser : MonoBehaviour
     private AnimationCurve _knockbackCurve =
         AnimationCurve.EaseInOut(0, 1, 1, 0); // 0~1: 힘 감쇠
 
+    [Header("Animation")]
+    [SerializeField] private EnemyBruiserAnimDriver _enemyBruiserAnimDriver;
+
     // ===== ScriptableObject References =====
     [Header("GameState Integration")]
     [SerializeField] private bool _respectGameState = true;                 // Playing에서만 동작
@@ -383,6 +386,11 @@ public class EnemyChaser : MonoBehaviour
 
         // 프로젝트의 DamageInfo/E_DamageType 시그니처에 맞춰 생성
         var info = new DamageInfo(_damage, _damageType, gameObject);
+
+        if (_enemyBruiserAnimDriver != null)
+        {
+            _enemyBruiserAnimDriver.NotifyAttack();
+        }
 
         // Health가 GameState를 추가로 존중하도록 설정되어 있으면 거기서 한 번 더 필터됨
         _targetHealth.TakeDamage(info);

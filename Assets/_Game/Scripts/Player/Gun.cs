@@ -2,9 +2,11 @@
 // 히트스캔(레이캐스트) 기반 사격 시스템 통합 구현
 // - GameState.IsPlayable()/IsInputLocked()에 따라 입력/발사/재장전 차단
 //
+// - Dash 동작 수행 중에는 Fire 불가(입력/외부 호출 모두 차단)
+//
 // - 자동/단발 모드, 연사/쿨다운, 산탄(스프레드), 탄환 수(옵션), 재장전(옵션)
-// - 조준: 플레이어(총구) forward 고정
-// - 인게임 표시: LineRenderer로 사격 거리만큼 붉은 라인 상시 업데이트
+// - 조준: "Muzzle → 마우스 월드 포인트(바닥 히트)" 방향
+// - 인게임 표시: LineRenderer로 사격 거리만큼 붉은 라인 상시 업데이트(마우스 방향)
 // - 히트 시 Health.TakeDamage() 호출, 이펙트/사운드 훅 제공
 // 의존: Input System(선택), Health.cs, (선택) Pooler.cs
 
@@ -45,9 +47,19 @@ public class Gun : MonoBehaviour
     [SerializeField] private Color _aimLineColor = Color.red;
     [SerializeField] private bool _hideLineWhenNotPlaying = true; // Perk/Pause/GameOver 시 비표시
 
+    [Header("Mouse Aim")]
+    [SerializeField] private Camera _mainCamera;
+    [SerializeField] private LayerMask _aimGroundMask = ~0;         // Ground만 포함 권장
+    [SerializeField] private float _aimRayMaxDistance = 300f;
+    [SerializeField] private bool _useRaycastAim = true;            // true: 바닥 Raycast, false: y=고정 평면
+
     [Header("Input (Optional)")]
     public InputActionReference _fireAction;       // Button
     public InputActionReference _reloadAction;       // Button
+
+    [Header("Dash Lock")]
+    [SerializeField] private bool _blockFireWhileDashing = true;
+    [SerializeField] private Dash _dash; // 미지정 시 Awake에서 자동 탐색(권장: Player에 붙어있다고 가정)
 
     // runtime
     private bool _isFirePressed;
@@ -79,6 +91,10 @@ public class Gun : MonoBehaviour
         if (_magazineSize > 0) _ammo = _magazineSize;
         if (_muzzle == null) _muzzle = transform;
 
+        if (_mainCamera == null) _mainCamera = Camera.main;
+
+        if (_dash == null) _dash = GetComponentInParent<Dash>(); // Player 하위에 Gun이 붙어있는 케이스 대응
+
         if (_showAimLine) SetupLineRenderer();
     }
 
@@ -90,8 +106,8 @@ public class Gun : MonoBehaviour
         if (_gs != null)
         {
             _gs.OnStateChangedEvent.AddListener(OnGameStateChanged);
+            OnGameStateChanged(_gs.PreviousState(), _gs.CurrentState());
         }
-        OnGameStateChanged(_gs.PreviousState(), _gs.CurrentState());
     }
 
     private void OnDisable()
@@ -109,11 +125,13 @@ public class Gun : MonoBehaviour
     {
         bool playable = _gs == null
             || (_gs.IsPlayable() && !_gs.IsInputLocked());
+        bool dashLock = _blockFireWhileDashing && _dash != null && _dash.IsDashing;
 
         // 입력 처리
         if (_fireAction != null)
         {
-            _isFirePressed = playable && _fireAction.action.IsPressed();
+            // Dash 중에는 입력 자체를 "안 눌린 것"처럼 처리(연사/단발 상태 꼬임 방지)
+            _isFirePressed = playable && !dashLock && _fireAction.action.IsPressed();
 
             if (_fireMode == E_FireMode.FullAuto)
             {
@@ -147,6 +165,10 @@ public class Gun : MonoBehaviour
     // 외부에서 발사 요청 시 사용
     public bool TryFire()
     {
+        // Dash 중 Fire 차단(외부 호출도 포함)
+        if (_blockFireWhileDashing && _dash != null && _dash.IsDashing)
+            return false;
+
         // 상태/재장전/쿨다운/탄약 체크
         if (_gs != null
             && (!_gs.IsPlayable() || _gs.IsInputLocked()))
@@ -202,7 +224,7 @@ public class Gun : MonoBehaviour
     private void FireBurst(int count)
     {
         // 조준 벡터 확인, 항상 forward
-        Vector3 baseDir = GetFireDirection();
+        Vector3 baseDir = GetFireDirection_MouseAim();
 
         for (int i = 0; i < count; i++)
         {
@@ -216,12 +238,71 @@ public class Gun : MonoBehaviour
         }
     }
 
+    // === 조준 = Muzzle → Mouse World Point(바닥 히트) ===
+    private Vector3 GetFireDirection_MouseAim()
+    {
+        Vector3 start = _muzzle != null ? _muzzle.position : transform.position;
+
+        if (TryGetMouseWorldPoint(start.y, out Vector3 worldPoint))
+        {
+            Vector3 dir = worldPoint - start;
+            dir.y = 0f; // 탑다운 기준 Y 고정(원하면 주석 처리)
+            if (dir.sqrMagnitude > 1e-4f)
+            {
+                return dir.normalized;
+            }
+        }
+
+        // fallback: muzzle forward
+        Vector3 f = _muzzle != null ? _muzzle.forward : transform.forward;
+        f.y = 0f;
+        if (f.sqrMagnitude < 1e-4f)
+        {
+            f = transform.forward;
+        }
+
+        return f.normalized;
+    }
+
+    private bool TryGetMouseWorldPoint(float planeY, out Vector3 worldPoint)
+    {
+        worldPoint = default;
+        if (_mainCamera == null) return false;
+
+        Vector2 mousePos = Mouse.current != null ? Mouse.current.position.ReadValue() : (Vector2)Input.mousePosition;
+        Ray ray = _mainCamera.ScreenPointToRay(mousePos);
+
+        if (_useRaycastAim)
+        {
+            if (Physics.Raycast(ray, out RaycastHit hit, _aimRayMaxDistance, _aimGroundMask, QueryTriggerInteraction.Ignore))
+            {
+                worldPoint = hit.point;
+                return true;
+            }
+            return false;
+        }
+        else
+        {
+            Plane plane = new Plane(Vector3.up, new Vector3(0f, planeY, 0f));
+            if (plane.Raycast(ray, out float enter))
+            {
+                worldPoint = ray.GetPoint(enter);
+                return true;
+            }
+            return false;
+        }
+    }
+
     // === 조준 = 플레이어(총구) forward ===
     private Vector3 GetFireDirection()
     {
         Vector3 dir = _muzzle.forward;
         dir.y = 0f;                // 탑다운 기준 Y 고정(원하면 주석 처리)
-        if (dir.sqrMagnitude < 1e-6f) dir = transform.forward;
+        if (dir.sqrMagnitude < 1e-4f)
+        {
+            dir = transform.forward;
+        }
+
         return dir.normalized;
     }
 
@@ -329,7 +410,7 @@ public class Gun : MonoBehaviour
         }
 
         Vector3 start = _muzzle != null ? _muzzle.position : transform.position;
-        Vector3 dir = GetFireDirection();
+        Vector3 dir = GetFireDirection_MouseAim();
 
         // 히트 여부에 따라 끝점 설정(히트 지점 또는 최대 사거리)
         Ray ray = new Ray(start, dir);

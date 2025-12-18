@@ -1853,7 +1853,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb8a1a2dff9dfc44a8d38d1c76cc1bfa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gun: {fileID: 1487024671}
+  _gun: {fileID: 0}
   _player: {fileID: 1562268423}
   _dash: {fileID: 1562268428}
   _health: {fileID: 1562268422}
@@ -2115,7 +2115,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 445475430}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.17843133, y: 4.310116e-15, z: -7.816025e-16, w: 0.9839524}
+  m_LocalRotation: {x: 0.13005395, y: 0.000000014774604, z: -0.000000001937955, w: 0.99150693}
   m_LocalPosition: {x: 0, y: 2.4572234, z: -13.885773}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -3007,6 +3007,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 748563076}
   m_CullTransparentMesh: 1
+--- !u!82 &762959653 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 7562262233045422198, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
+  m_PrefabInstance: {fileID: 834374635045809075}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &800709801
 GameObject:
   m_ObjectHideFlags: 0
@@ -5000,17 +5005,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1440343296}
   m_CullTransparentMesh: 1
---- !u!114 &1487024671 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1311578447104698550, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
-  m_PrefabInstance: {fileID: 834374635045809075}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9df3b41cbe1063f41b1b7c5b3ae4580d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1506748513
 GameObject:
   m_ObjectHideFlags: 0
@@ -6319,7 +6313,7 @@ MonoBehaviour:
       Size: {x: 0.8, y: 0.8}
       Offset: {x: 0, y: 0}
   CenterOnActivate: 1
-  TargetOffset: {x: 0, y: 0, z: 0}
+  TargetOffset: {x: 0, y: 0.42, z: 0}
   Damping: {x: 0.5, y: 0.5}
   Lookahead:
     Enabled: 0
@@ -6440,7 +6434,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1770800415}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.17843132, y: 4.425056e-15, z: -1.4154362e-15, w: 0.9839524}
+  m_LocalRotation: {x: 0.13005397, y: 0.000000014774604, z: -0.000000001937955, w: 0.99150693}
   m_LocalPosition: {x: 0, y: 2.4572234, z: -13.885773}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -7110,14 +7104,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 202347990105447378, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 1487305182276590586, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 2294150570191829032, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
+      propertyPath: _dash
+      value: 
+      objectReference: {fileID: 1562268428}
+    - target: {fileID: 2294150570191829032, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
+      propertyPath: _audioSource
+      value: 
+      objectReference: {fileID: 762959653}
     - target: {fileID: 5716891192824389098, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -7158,9 +7156,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6111839946016741600, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
-      propertyPath: _colorProperty
-      value: _BaseColor
+    - target: {fileID: 6265663599496659120, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
+      propertyPath: _dashDuration
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8133351195510891413, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
       propertyPath: _cameraTransform
