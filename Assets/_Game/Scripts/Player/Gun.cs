@@ -41,21 +41,12 @@ public class Gun : MonoBehaviour
     [SerializeField] private AudioClip _fireSfx;           // 발사음(옵션)
     [SerializeField] private AudioClip _reloadSfx;         // 재장전(옵션)
 
-    [Header("Aim Line")]
-    [SerializeField] private bool _showAimLine = true;
-    [SerializeField, Range(0.05f, 0.5f)] private float _aimLineWidth = 0.03f;
-    [SerializeField] private Color _aimLineColor = Color.red;
-    [SerializeField] private bool _hideLineWhenNotPlaying = true; // Perk/Pause/GameOver 시 비표시
-
-    [Header("Mouse Aim")]
-    [SerializeField] private Camera _mainCamera;
-    [SerializeField] private LayerMask _aimGroundMask = ~0;         // Ground만 포함 권장
-    [SerializeField] private float _aimRayMaxDistance = 300f;
-    [SerializeField] private bool _useRaycastAim = true;            // true: 바닥 Raycast, false: y=고정 평면
+    [Header("Aim Provider")]
+    [SerializeField] private CrosshairAim _aim;
 
     [Header("Input (Optional)")]
-    public InputActionReference _fireAction;       // Button
-    public InputActionReference _reloadAction;       // Button
+    public InputActionReference _fireAction;    // Button
+    public InputActionReference _reloadAction;  // Button
 
     [Header("Dash Lock")]
     [SerializeField] private bool _blockFireWhileDashing = true;
@@ -63,16 +54,15 @@ public class Gun : MonoBehaviour
 
     // runtime
     private bool _isFirePressed;
+    public bool IsFirePressed => _isFirePressed;
     private float _nextFireTime;
     private bool _triggerReleased = true;     // 단발 트리거 제어
     private int _ammo;                        // 현재 탄 수
     private bool _reloading;
     private float _reloadEndTime;             // 재장전 종료 시각
 
-    private LineRenderer _line;
-    private float _prevAimLineWidth;
-
     private GameState _gs;
+    private PlayerController _playerController;
 
     // 상태 조회
     public bool IsReloading => _reloading;
@@ -91,11 +81,9 @@ public class Gun : MonoBehaviour
         if (_magazineSize > 0) _ammo = _magazineSize;
         if (_muzzle == null) _muzzle = transform;
 
-        if (_mainCamera == null) _mainCamera = Camera.main;
-
+        if (_aim == null) _aim = FindAnyObjectByType<CrosshairAim>();
         if (_dash == null) _dash = GetComponentInParent<Dash>(); // Player 하위에 Gun이 붙어있는 케이스 대응
-
-        if (_showAimLine) SetupLineRenderer();
+        if (_playerController == null) _playerController = GetComponentInParent<PlayerController>();
     }
 
     private void OnEnable()
@@ -135,12 +123,23 @@ public class Gun : MonoBehaviour
 
             if (_fireMode == E_FireMode.FullAuto)
             {
-                if (_isFirePressed) TryFire();
+                if (_isFirePressed)
+                {
+                    if (_playerController)
+                    {
+                        _playerController.FaceCameraForwardImmediate();
+                    }
+                    TryFire();
+                }
             }
             else // SemiAuto
             {
                 if (_isFirePressed && _triggerReleased)
                 {
+                    if (_playerController)
+                    {
+                        _playerController.FaceCameraForwardImmediate();
+                    }
                     TryFire();
                     _triggerReleased = false;
                 }
@@ -157,9 +156,6 @@ public class Gun : MonoBehaviour
                 StartReload();
             }
         }
-
-        // 사격 라인 상시 갱신
-        if (_showAimLine) UpdateAimLine(playable);
     }
 
     // 외부에서 발사 요청 시 사용
@@ -224,7 +220,7 @@ public class Gun : MonoBehaviour
     private void FireBurst(int count)
     {
         // 조준 벡터 확인, 항상 forward
-        Vector3 baseDir = GetFireDirection_MouseAim();
+        Vector3 baseDir = GetFireDirection_Crosshair();
 
         for (int i = 0; i < count; i++)
         {
@@ -238,72 +234,26 @@ public class Gun : MonoBehaviour
         }
     }
 
-    // === 조준 = Muzzle → Mouse World Point(바닥 히트) ===
-    private Vector3 GetFireDirection_MouseAim()
+    // 공격 방향 = 크로스헤어(카메라 중앙)
+    // Ray 방향 = Muzzle -> CrosshairWorldPoint
+    private Vector3 GetFireDirection_Crosshair()
     {
         Vector3 start = _muzzle != null ? _muzzle.position : transform.position;
 
-        if (TryGetMouseWorldPoint(start.y, out Vector3 worldPoint))
+        if (_aim != null && _aim.TryGetCrosshairWorldPoint(start.y, out Vector3 worldPoint))
         {
             Vector3 dir = worldPoint - start;
-            dir.y = 0f; // 탑다운 기준 Y 고정(원하면 주석 처리)
-            if (dir.sqrMagnitude > 1e-4f)
-            {
-                return dir.normalized;
-            }
+            if (dir.sqrMagnitude > 1e-4f) return dir.normalized;
         }
 
         // fallback: muzzle forward
-        Vector3 f = _muzzle != null ? _muzzle.forward : transform.forward;
-        f.y = 0f;
-        if (f.sqrMagnitude < 1e-4f)
+        if (_aim != null && _aim.Camera != null)
         {
-            f = transform.forward;
+            Vector3 f = _aim.Camera.transform.forward;
+            if (f.sqrMagnitude > 1e-4f) return f.normalized;
         }
 
-        return f.normalized;
-    }
-
-    private bool TryGetMouseWorldPoint(float planeY, out Vector3 worldPoint)
-    {
-        worldPoint = default;
-        if (_mainCamera == null) return false;
-
-        Vector2 mousePos = Mouse.current != null ? Mouse.current.position.ReadValue() : (Vector2)Input.mousePosition;
-        Ray ray = _mainCamera.ScreenPointToRay(mousePos);
-
-        if (_useRaycastAim)
-        {
-            if (Physics.Raycast(ray, out RaycastHit hit, _aimRayMaxDistance, _aimGroundMask, QueryTriggerInteraction.Ignore))
-            {
-                worldPoint = hit.point;
-                return true;
-            }
-            return false;
-        }
-        else
-        {
-            Plane plane = new Plane(Vector3.up, new Vector3(0f, planeY, 0f));
-            if (plane.Raycast(ray, out float enter))
-            {
-                worldPoint = ray.GetPoint(enter);
-                return true;
-            }
-            return false;
-        }
-    }
-
-    // === 조준 = 플레이어(총구) forward ===
-    private Vector3 GetFireDirection()
-    {
-        Vector3 dir = _muzzle.forward;
-        dir.y = 0f;                // 탑다운 기준 Y 고정(원하면 주석 처리)
-        if (dir.sqrMagnitude < 1e-4f)
-        {
-            dir = transform.forward;
-        }
-
-        return dir.normalized;
+        return _muzzle.forward.normalized;
     }
 
     private Vector3 ApplySpread(Vector3 dir, float degrees)
@@ -361,67 +311,6 @@ public class Gun : MonoBehaviour
         // fx가 자체 파괴 타이머를 가진다고 가정
     }
 
-    // ===== Aim Line =====
-    void SetupLineRenderer()
-    {
-        _line = gameObject.GetComponent<LineRenderer>();
-        if (_line == null) _line = gameObject.AddComponent<LineRenderer>();
-
-        _line.positionCount = 2;
-        _line.useWorldSpace = true;
-        _line.startWidth = _aimLineWidth;
-        _line.endWidth = _aimLineWidth;
-        _prevAimLineWidth = _aimLineWidth;
-
-        // 머티리얼(런타임 생성; 프로젝트 정책에 맞춰 교체 가능)
-        var shader = Shader.Find("Sprites/Default");
-        if (_line.sharedMaterial == null && shader != null)
-        {
-            var mat = new Material(shader);
-            mat.name = "Gun_AimLine_Mat(Runtime)";
-            _line.sharedMaterial = mat;
-        }
-
-        _line.startColor = _aimLineColor;
-        _line.endColor = _aimLineColor;
-        _line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        _line.receiveShadows = false;
-        _line.enabled = true;
-    }
-
-    void UpdateAimLine(bool playable)
-    {
-        if (_line == null) return;
-
-        // 상태에 따라 표시 제어
-        if (_hideLineWhenNotPlaying && _gs != null)
-        {
-            bool show = _gs.IsPlayable()
-                && !_gs.IsInputLocked();
-            if (_line.enabled != show) _line.enabled = show;
-            if (!show) return;
-        }
-
-        if (_prevAimLineWidth != _aimLineWidth)
-        {
-            _line.startWidth = _aimLineWidth;
-            _line.endWidth = _aimLineWidth;
-            _prevAimLineWidth = _aimLineWidth;
-        }
-
-        Vector3 start = _muzzle != null ? _muzzle.position : transform.position;
-        Vector3 dir = GetFireDirection_MouseAim();
-
-        // 히트 여부에 따라 끝점 설정(히트 지점 또는 최대 사거리)
-        Ray ray = new Ray(start, dir);
-        Vector3 end = start + dir * _range;
-        if (Physics.Raycast(ray, out RaycastHit hit, _range, _hitMask, QueryTriggerInteraction.Ignore))
-            end = hit.point;
-
-        _line.SetPosition(0, start);
-        _line.SetPosition(1, end);
-    }
-
     // ===== GameState Hooks =====
     private void OnGameStateChanged(GameStateSO.E_GamePlayState prev, GameStateSO.E_GamePlayState current)
     {
@@ -430,13 +319,6 @@ public class Gun : MonoBehaviour
         {
             _isFirePressed = false;
             _triggerReleased = true;
-        }
-
-        // 조준 라인 즉시 표시/비표시 반영 (UpdateAimLine에서도 보호)
-        if (_hideLineWhenNotPlaying && _line != null)
-        {
-            bool show = current == GameStateSO.E_GamePlayState.Playing;
-            _line.enabled = show && _showAimLine;
         }
     }
 }

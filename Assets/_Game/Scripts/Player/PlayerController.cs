@@ -20,29 +20,21 @@ public class PlayerController : MonoBehaviour
     [Header("ScriptableObject Events")]
     public GameEventSO OnPlayerDiedEvent; // 플레이어 사망 이벤트
 
+    [Header("Refs")]
+    [SerializeField] private Gun _gun;
+    [SerializeField] private CrosshairAim _aim;
+
     [Header("Move")]
     [SerializeField, Range(0.5f, 20f)] private float _moveSpeed = 6f;
     public float MoveSpeed { get { return _moveSpeed; } set { _moveSpeed = value; } }
 
     [Header("Facing")]
-    [SerializeField] private bool _faceMoveDirection = true;
     [SerializeField, Range(1f, 30f)] private float _turnSpeed = 18f; // 회전 보간 속도
     [SerializeField, Range(0.0001f, 0.1f)] private float _faceDeadZone = 0.001f;
-
-    [Header("Mouse Aim Facing")]
-    [SerializeField] private Camera _mainCamera;
-    [SerializeField] private LayerMask _aimGroundMask = ~0;     // Ground만 포함 권장
-    [SerializeField] private float _aimRayMaxDistance = 300f;
-    [SerializeField] private bool _useRaycastAim = true;        // true: Raycast / false: Plane
-
-    // 카메라 Transform을 Inspector에서 연결
-    [Header("Camera Reference")]
-    [SerializeField] private Transform _cameraTransform;
 
     [Header("Input")]
     public InputActionReference _moveAction;    // Vector2(WASD)
     public InputActionReference _dashAction;    // Button (Space/Shift 등)
-    public InputActionReference _aimAction;     // Button (Aim 또는 Fire에 연결)
 
     [Header("Debug")]
     [SerializeField] private bool _logDamage = false;
@@ -50,10 +42,8 @@ public class PlayerController : MonoBehaviour
     // runtime
     private Vector2 _moveInput;         // WASD
     private Rigidbody _rb;
-
     private Health _health;
     private Dash _dash;                 // Dash 컴포넌트 연동
-
     private GameState _gs;
 
     // cached facing
@@ -61,20 +51,21 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
-        _gs = FindAnyObjectByType<GameState>();
+        if (_gs == null) _gs = FindAnyObjectByType<GameState>();
 
-        _rb = GetComponent<Rigidbody>();
+        if (_rb == null) _rb = GetComponent<Rigidbody>();
         _rb.useGravity = false;
         _rb.constraints = RigidbodyConstraints.FreezeRotation;
 
-        _health = GetComponent<Health>();
-        _dash = GetComponent<Dash>();   // 동 위치 컴포넌트 권장
+        if (_health == null) _health = GetComponent<Health>();
+        if (_dash == null) _dash = GetComponent<Dash>();   // 동 위치 컴포넌트 권장
         if (_dash == null)
         {
             Debug.LogWarning("[PlayerController] Dash 컴포넌트가 없습니다. 대시 비활성.");
         }
 
-        if (_mainCamera == null) _mainCamera = Camera.main;
+        if (_gun == null) _gun = GetComponentInChildren<Gun>();
+        if (_aim == null) _aim = FindAnyObjectByType<CrosshairAim>();
     }
 
     private void OnEnable()
@@ -87,8 +78,6 @@ public class PlayerController : MonoBehaviour
             _dashAction.action.Enable();
             _dashAction.action.performed += OnDashPerformed; // 버튼 눌림 시 대시 시도
         }
-
-        if (_aimAction != null) _aimAction.action.Enable();
 
         if (_health != null)
         {
@@ -108,8 +97,6 @@ public class PlayerController : MonoBehaviour
             _dashAction.action.Disable();
         }
 
-        if (_aimAction != null) _aimAction.action.Disable();
-
         if (_health != null)
         {
             _health.RemoveListenerOnDamagedEvent(OnDamaged);
@@ -120,8 +107,7 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         // 입력 읽기 전 상태 확인
-        if (_gs != null
-            && (_gs.IsInputLocked() || !_gs.IsPlayable()))
+        if (!IsPlayableNow())
         {
             _moveInput = Vector2.zero;
             return;
@@ -133,8 +119,7 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         // PerkSelect/Paused/GameOver 동안 이동 차단
-        if (_gs != null
-            && (_gs.IsInputLocked() || !_gs.IsPlayable()))
+        if (!IsPlayableNow())
         {
             return;
         }
@@ -150,26 +135,13 @@ public class PlayerController : MonoBehaviour
                 _lastMoveDir = moveDir;
         }
 
-        // ===== 회전 우선순위: Dash > Aim > Move =====
-        if (_dash != null && _dash.IsDashing)
-        {
-            // Dash 방향 = _lastMoveDir (OnDashPerformed에서 dashDir로 갱신됨)
-            FaceDirection(_lastMoveDir);
-        }
-        else if (IsAiming())
-        {
-            FaceMouseDirection();
-        }
-        else if (_faceMoveDirection)
-        {
-            FaceMoveDirection();
-        }
+        // 기본 회전: 이동 방향(대시 중이면 마지막 방향)
+        FaceDirection(_lastMoveDir);
     }
 
-    private bool IsAiming()
+    private bool IsPlayableNow()
     {
-        if (_aimAction == null) return false;
-        return _aimAction.action.IsPressed();
+        return _gs != null || (_gs.IsPlayable() && !_gs.IsInputLocked());
     }
 
     /// <summary>
@@ -177,13 +149,15 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     private Vector3 CalcMoveDirCameraRelative(Vector2 input)
     {
-        if (_cameraTransform == null) return Vector3.zero;
+        if (_aim == null || _aim.Camera == null) return Vector3.zero;
 
-        Vector3 camForward = _cameraTransform.forward;
+        Transform camTr = _aim.Camera.transform;
+
+        Vector3 camForward = camTr.forward;
         camForward.y = 0f;
         camForward.Normalize();
 
-        Vector3 camRight = _cameraTransform.right;
+        Vector3 camRight = camTr.right;
         camRight.y = 0f;
         camRight.Normalize();
 
@@ -208,85 +182,29 @@ public class PlayerController : MonoBehaviour
         _rb.MovePosition(targetPos);
     }
 
-    /// <summary>
-    /// 이동 방향(또는 대시 중이면 마지막 이동 방향)을 바라본다.
-    /// </summary>
-    private void FaceMoveDirection()
-    {
-        FaceDirection(_lastMoveDir);
-    }
-
-    private void FaceMouseDirection()
-    {
-        if (_mainCamera == null) return;
-
-        if (!TryGetMouseWorldPoint(_rb.position.y, out Vector3 worldPoint))
-            return;
-
-        Vector3 dir = worldPoint - _rb.position;
-        dir.y = 0f;
-        if (dir.sqrMagnitude <= _faceDeadZone)
-            return;
-
-        FaceDirection(dir);
-    }
-
     private void FaceDirection(Vector3 dir)
     {
         dir.y = 0f;
         if (dir.sqrMagnitude <= _faceDeadZone) return;
+        if (_gun.IsFirePressed) return;
 
         Quaternion targetRot = Quaternion.LookRotation(dir.normalized, Vector3.up);
         Quaternion next = Quaternion.Slerp(_rb.rotation, targetRot, 1f - Mathf.Exp(-_turnSpeed * Time.fixedDeltaTime));
         _rb.MoveRotation(next);
     }
 
-    private bool TryGetMouseWorldPoint(float planeY, out Vector3 worldPoint)
+    // Fire 직전: 캐릭터가 카메라 정면을 보게 변경
+    public void FaceCameraForwardImmediate()
     {
-        worldPoint = default;
+        if (_aim == null) return;
 
-        Vector2 mousePos = Mouse.current != null
-            ? Mouse.current.position.ReadValue()
-            : (Vector2)Input.mousePosition;
+        Vector3 camF = _aim.GetCameraForwardFlat();
+        if (camF.sqrMagnitude <= 1e-4f) return;
 
-        Ray ray = _mainCamera.ScreenPointToRay(mousePos);
+        _lastMoveDir = camF;
+        _rb.MoveRotation(Quaternion.LookRotation(camF, Vector3.up));
 
-        if (_useRaycastAim)
-        {
-            if (Physics.Raycast(ray, out RaycastHit hit, _aimRayMaxDistance, _aimGroundMask, QueryTriggerInteraction.Ignore))
-            {
-                worldPoint = hit.point;
-                return true;
-            }
-            return false;
-        }
-        else
-        {
-            Plane plane = new Plane(Vector3.up, new Vector3(0f, planeY, 0f));
-            if (plane.Raycast(ray, out float enter))
-            {
-                worldPoint = ray.GetPoint(enter);
-                return true;
-            }
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// 플레이어는 항상 카메라가 바라보는 방향을 향한다.
-    /// </summary>
-    private void FaceCameraDirection()
-    {
-        if (_cameraTransform == null) return;
-
-        Vector3 viewDir = _cameraTransform.forward;
-        viewDir.y = 0f;
-
-        if (viewDir.sqrMagnitude > 0.001f)
-        {
-            Quaternion targetRot = Quaternion.LookRotation(viewDir);
-            _rb.MoveRotation(targetRot);
-        }
+        Debug.Log("FaceCameraForwardImmediate");
     }
 
     /// <summary>
@@ -300,9 +218,6 @@ public class PlayerController : MonoBehaviour
         {
             return; // 게임 상태상 입력 차단
         }
-
-        // 카메라 기준 벡터
-        if (_cameraTransform == null) return;
 
         Vector3 dashDir = CalcMoveDirCameraRelative(_moveInput);
         if (dashDir.sqrMagnitude < 0.0001f)

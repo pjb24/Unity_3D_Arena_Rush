@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 7264804092583994628}
   - component: {fileID: 6111839946016741600}
   - component: {fileID: 3549810317363597941}
+  - component: {fileID: 5940148617707091880}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -160,20 +161,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   OnPlayerDiedEvent: {fileID: 11400000, guid: 37f282b30246771489992eeeb78efdb6, type: 2}
+  _gun: {fileID: 2294150570191829032}
+  _aim: {fileID: 5940148617707091880}
   _moveSpeed: 6
-  _faceMoveDirection: 1
   _turnSpeed: 18
   _faceDeadZone: 0.001
-  _mainCamera: {fileID: 0}
-  _aimGroundMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  _aimRayMaxDistance: 300
-  _useRaycastAim: 1
-  _cameraTransform: {fileID: 0}
   _moveAction: {fileID: -1680190386980627800, guid: 9e4c1d5586cdc914893548e6c606e47f, type: 3}
   _dashAction: {fileID: 9033676267025546842, guid: 9e4c1d5586cdc914893548e6c606e47f, type: 3}
-  _aimAction: {fileID: 1120369429361536294, guid: 9e4c1d5586cdc914893548e6c606e47f, type: 3}
+  _fireAction: {fileID: 1120369429361536294, guid: 9e4c1d5586cdc914893548e6c606e47f, type: 3}
   _logDamage: 1
 --- !u!114 &8931429055457635531
 MonoBehaviour:
@@ -208,7 +203,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dashDistance: 18
-  _dashDuration: 0.15
+  _dashDuration: 1
   _cooldown: 0.8
   _speedCurve:
     serializedVersion: 2
@@ -320,6 +315,26 @@ MonoBehaviour:
   _movingSpeedThreshold: 0.1
   _aimLatchSeconds: 0.2
   _useVelocityForMoving: 0
+  _dashClip: {fileID: -203655887218126122, guid: 892f12b4065540c469cf7972c0aad3fd, type: 3}
+  _applyDashSpeedMultiplier: 1
+--- !u!114 &5940148617707091880
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1487305182276590586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fd3d95918d41c842b8ed29729a6c4ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _camera: {fileID: 0}
+  _resolveMode: 0
+  _groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _rayMaxDistance: 500
 --- !u!1 &3989577465544476011
 GameObject:
   m_ObjectHideFlags: 0
@@ -404,17 +419,45 @@ PrefabInstance:
       value: Blaster
       objectReference: {fileID: 0}
     - target: {fileID: 4536591810444758752, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
+      propertyPath: _aim
+      value: 
+      objectReference: {fileID: 5940148617707091880}
+    - target: {fileID: 4536591810444758752, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
+      propertyPath: _dash
+      value: 
+      objectReference: {fileID: 6265663599496659120}
+    - target: {fileID: 4536591810444758752, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
       propertyPath: _muzzle
       value: 
       objectReference: {fileID: 4225205884472521704}
+    - target: {fileID: 4536591810444758752, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
+      propertyPath: _audioSource
+      value: 
+      objectReference: {fileID: 7562262233045422198}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
+--- !u!114 &2294150570191829032 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4536591810444758752, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
+  m_PrefabInstance: {fileID: 2387826989345715912}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9df3b41cbe1063f41b1b7c5b3ae4580d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &3957339392667972962 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1713629326968669098, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
+  m_PrefabInstance: {fileID: 2387826989345715912}
+  m_PrefabAsset: {fileID: 0}
+--- !u!82 &7562262233045422198 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 5319259761060669118, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
   m_PrefabInstance: {fileID: 2387826989345715912}
   m_PrefabAsset: {fileID: 0}
 --- !u!199 &9046803687970385084 stripped
