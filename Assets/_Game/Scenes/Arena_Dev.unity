@@ -257,7 +257,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &26320029
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1853,7 +1853,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb8a1a2dff9dfc44a8d38d1c76cc1bfa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gun: {fileID: 0}
+  _gun: {fileID: 762959655}
   _player: {fileID: 1562268423}
   _dash: {fileID: 1562268428}
   _health: {fileID: 1562268422}
@@ -3012,6 +3012,17 @@ AudioSource:
   m_CorrespondingSourceObject: {fileID: 7562262233045422198, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
   m_PrefabInstance: {fileID: 834374635045809075}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &762959655 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2294150570191829032, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
+  m_PrefabInstance: {fileID: 834374635045809075}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9df3b41cbe1063f41b1b7c5b3ae4580d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &800709801
 GameObject:
   m_ObjectHideFlags: 0
@@ -4407,7 +4418,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1201065558
 RectTransform:
   m_ObjectHideFlags: 0

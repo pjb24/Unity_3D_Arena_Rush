@@ -2,6 +2,7 @@
 /// EnemyChaser (NavMesh 기반 추적형 최소 구현)
 /// - 플레이어 자동 추적(SetDestination 주기 갱신)
 /// - 근접 공격(쿨다운/사거리)
+/// - (공격: 이동 정지 → 애니 재생 → 이벤트로 히트박스/종료)
 /// - LOS(시야차단) 옵션
 /// - 풀링/재활용 대응(OnEnable 초기화)
 /// - 탑다운 환경(updateUpAxis 옵션) 대응
@@ -58,19 +59,12 @@ public class EnemyChaser : MonoBehaviour
     [Header("Misc")]
     [SerializeField] private bool _drawGizmos = true;
 
-    [Header("Rigidbody Move (Legacy)")]
-    [SerializeField] private bool _rigidbodyMove;
-    [SerializeField] private float _maxSpeed = 6f;          // m/s
-    [SerializeField] private float _accel = 30f;            // m/s^2
-    [SerializeField] private float _turnSpeed = 18f;        // yaw 보간 속도
-    [SerializeField] private bool _faceMoveDir = true;      // 이동 방향으로 바라보기
-
-    [Header("Physics (Legacy)")]
-    [SerializeField] private float _gravity = -30f;         // 탑다운이라면 0으로 설정 가능
-    [SerializeField] private bool _freezeXZRotation = true;
-
     [Header("Debug")]
     [SerializeField] private bool _logDamage = false;
+
+    // 외부 드라이버가 필요로 하는 값(Driver에서 Configure에 사용)
+    public int Damage => _damage;
+    public E_DamageType DamageType => _damageType;
 
     // Cache
     private NavMeshAgent _agent;
@@ -82,12 +76,10 @@ public class EnemyChaser : MonoBehaviour
 
     // runtime
     private bool _hasTarget;
+    private bool _isAttacking;
     private bool _isKnockback = false;
     private float _stunUntil = 0f;
     private Coroutine _knockRoutine;
-
-    // Legacy
-    private Rigidbody _rb;
 
     private GameState _gs;
     private Health _health;
@@ -113,15 +105,6 @@ public class EnemyChaser : MonoBehaviour
 
         _gs = FindAnyObjectByType<GameState>();
         _health = GetComponent<Health>();
-
-        if (_rigidbodyMove)
-        {
-            _rb = GetComponent<Rigidbody>();
-            _rb.interpolation = RigidbodyInterpolation.Interpolate;
-            _rb.constraints = _freezeXZRotation
-                ? RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ
-                : RigidbodyConstraints.None;
-        }
     }
 
     private void OnEnable()
@@ -138,12 +121,14 @@ public class EnemyChaser : MonoBehaviour
             var p = GameObject.FindGameObjectWithTag(_playerTag);
             if (p != null) _target = p.transform;
         }
+
         _targetHealth = _target ? _target.GetComponent<Health>() : null;
         _hasTarget = _target != null;
 
         // 타이머 초기화
         _attackTimer = 0f;
         _repathTimer = 0f;
+        _isAttacking = false;
 
         // Agent 초기화(풀링 복원 대비)
         _agent.isStopped = false;
@@ -153,13 +138,6 @@ public class EnemyChaser : MonoBehaviour
         if (_health != null)
         {
             _health.AddListenerOnDamagedEvent(OnDamaged);
-        }
-
-        if (_rigidbodyMove)
-        {
-            // 초기 속도 정리(풀링 대응)
-            _rb.linearVelocity = Vector3.zero;
-            _rb.angularVelocity = Vector3.zero;
         }
 
         // 현재 상태 정책 즉시 반영
@@ -198,7 +176,34 @@ public class EnemyChaser : MonoBehaviour
             return;
         }
 
+        // 공격 쿨다운 감소 처리
+        _attackTimer -= Time.deltaTime;
+
+        // 공격 중이면: 이동 정지 유지(애니 이벤트로 종료됨)
+        if (_isAttacking)
+        {
+            StopChase();
+            return;
+        }
+
+        // 공격 거리 이내면: 이동 정지 + 공격 트리거
+        if (!stunned && _attackTimer <= 0f)
+        {
+            float dist = Vector3.Distance(transform.position, _target.position);
+            if (dist <= _attackRange)
+            {
+                if (!_useLOS || HasLineOfSight(transform.position, _target.position))
+                {
+                    StopChase();
+                    StartAttack();
+                }
+
+                return;
+            }
+        }
+
         // 경로 갱신(스파이크 방지용 간격)
+        // 공격 거리 밖: 추적
         _repathTimer -= Time.deltaTime;
         if (!stunned && _repathTimer <= 0f)
         {
@@ -207,104 +212,53 @@ public class EnemyChaser : MonoBehaviour
             if (_agent.enabled)
                 _agent.SetDestination(_target.position);
         }
-
-        // 공격 처리
-        _attackTimer -= Time.deltaTime;
-
-        if (!stunned && _attackTimer <= 0f)
-        {
-            float dist = Vector3.Distance(transform.position, _target.position);
-            if (dist <= _attackRange)
-            {
-                if (!_useLOS || HasLineOfSight(transform.position, _target.position))
-                {
-                    TryDealDamage(); // 내부에서 _attackTimer 재설정
-                }
-            }
-        }
     }
 
-    private void FixedUpdate()
+    private void StartAttack()
     {
-        if (!_rigidbodyMove) return;
+        _isAttacking = true;
 
-        if (!_hasTarget) return;
+        // “다음 공격까지 최소 간격”은 여기서 바로 걸어둔다.
+        _attackTimer = _attackCooldown;
 
-        if (_respectGameState && !CanOperateByGameState())
-        {
-            BrakeToStop();
-            return;
-        }
-
-        // 타깃 유효성
-        if (_targetHealth != null && _targetHealth.IsDead)
-        {
-            // 대상 사망 시 추적 해제(정지)
-            BrakeToStop();
-            return;
-        }
-
-        var pos = _rb.position;
-        var tpos = _target.position;
-
-        // 이동 계산
-        Vector3 toTarget = tpos - pos;
-        toTarget.y = 0f; // 탑다운 기준
-        float dist = toTarget.magnitude;
-
-        if (dist > 0.001f)
-        {
-            Vector3 dir = toTarget / dist;
-
-            // 정지 거리 내에서는 속도 감쇠
-            float targetSpeed = (dist > _stoppingDistance)
-                ? _maxSpeed
-                : Mathf.Lerp(0f, _maxSpeed, Mathf.InverseLerp(0f, _stoppingDistance, dist));
-            Vector3 targetVel = dir * targetSpeed;
-
-            // 가속도 제한(steering)
-            Vector3 dv = targetVel - _rb.linearVelocity;
-            float maxDelta = _accel * Time.fixedDeltaTime;
-            if (dv.sqrMagnitude > maxDelta * maxDelta)
-            {
-                dv = dv.normalized * maxDelta;
-            }
-
-            // 중력(원한다면 0으로)
-            Vector3 gravity = Vector3.up * _gravity * Time.fixedDeltaTime;
-
-            _rb.linearVelocity += dv + gravity;
-
-            // 회전
-            if (_faceMoveDir)
-            {
-                Vector3 v = _rb.linearVelocity;
-                v.y = 0f;
-                if (v.sqrMagnitude > 0.0001f)
-                {
-                    Quaternion look = Quaternion.LookRotation(v.normalized, Vector3.up);
-                    _rb.MoveRotation(Quaternion.Slerp(_rb.rotation, look, 1f - Mathf.Exp(-_turnSpeed * Time.fixedDeltaTime)));
-                }
-            }
-        }
-        else
-        {
-            BrakeToStop();
-        }
-
-        // 공격
-        _attackTimer -= Time.fixedDeltaTime;
-        if (_attackTimer <= 0f && dist <= _attackRange)
-        {
-            if (!_useLOS || HasLineOfSight(_rb.position, tpos))
-            {
-                TryDealDamage();
-            }
-        }
+        // 애니 재생 + 쿨다운 안에 끝나도록 속도 보정
+        if (_enemyBruiserAnimDriver != null)
+            _enemyBruiserAnimDriver.NotifyAttack(_attackCooldown);
     }
     #endregion
 
+    /// <summary>
+    /// Attack 애니 끝 프레임(AnimEvent_AttackEnd)에서 호출된다.
+    /// </summary>
+    public void NotifyAttackAnimationEnded()
+    {
+        _isAttacking = false;
+
+        if (!_hasTarget || !_agent.enabled) return;
+
+        float dist = Vector3.Distance(transform.position, _target.position);
+
+        // 아직 공격 거리면 계속 정지(다음 쿨다운까지 대기)
+        if (dist <= _attackRange)
+        {
+            StopChase();
+            return;
+        }
+
+        // 벗어났으면 추적 재개
+        _agent.isStopped = false;
+        _agent.SetDestination(_target.position);
+    }
+
     #region Public API
+    /// <summary>추적 정지(게임 상태 전환/사망 등)</summary>
+    public void StopChase()
+    {
+        if (_agent == null || !_agent.enabled) return;
+        _agent.isStopped = true;
+        _agent.ResetPath();
+    }
+
     /// <summary>외부에서 타깃 변경 주입</summary>
     public void SetTarget(Transform t)
     {
@@ -317,13 +271,6 @@ public class EnemyChaser : MonoBehaviour
             _agent.ResetPath();
             _agent.SetDestination(_target.position);
         }
-    }
-
-    /// <summary>추적 정지(게임 상태 전환/사망 등)</summary>
-    public void StopChase()
-    {
-        _agent.isStopped = true;
-        _agent.ResetPath();
     }
 
     /// <summary>
@@ -344,23 +291,10 @@ public class EnemyChaser : MonoBehaviour
         _repathTimer = 0f;
         _agent.isStopped = false;
         _agent.ResetPath();
-
-        if (_rigidbodyMove)
-        {
-            _rb.linearVelocity = Vector3.zero;
-            _rb.angularVelocity = Vector3.zero;
-        }
     }
     #endregion
 
     #region Internal
-    // Legacy
-    private void BrakeToStop()
-    {
-        // 간단 감속
-        _rb.linearVelocity = Vector3.Lerp(_rb.linearVelocity, Vector3.zero, 0.2f);
-    }
-
     private bool HasLineOfSight(Vector3 from, Vector3 to)
     {
         Vector3 origin = from + Vector3.up * _losHeight;
@@ -375,28 +309,6 @@ public class EnemyChaser : MonoBehaviour
         dir /= len;
 
         return !Physics.Raycast(origin, dir, len, _losBlockMask, QueryTriggerInteraction.Ignore);
-    }
-
-    private void TryDealDamage()
-    {
-        if (_respectGameState && !CanOperateByGameState())
-            return;
-
-        if (_targetHealth == null) return;
-
-        // 프로젝트의 DamageInfo/E_DamageType 시그니처에 맞춰 생성
-        var info = new DamageInfo(_damage, _damageType, gameObject);
-
-        if (_enemyBruiserAnimDriver != null)
-        {
-            _enemyBruiserAnimDriver.NotifyAttack();
-        }
-
-        // Health가 GameState를 추가로 존중하도록 설정되어 있으면 거기서 한 번 더 필터됨
-        _targetHealth.TakeDamage(info);
-
-        // 공격 시도 후 쿨다운 적용
-        _attackTimer = _attackCooldown;
     }
 
     private IEnumerator Co_Knockback(Vector3 sourcePos, float force, float duration)
@@ -549,6 +461,7 @@ public class EnemyChaser : MonoBehaviour
         if (!_respectGameState) return true;
 
         if (_gs == null) return true;
+
         // 입력 잠금 시에도 AI 정지
         bool result = false;
         result = _gs.IsPlayable()
@@ -565,26 +478,19 @@ public class EnemyChaser : MonoBehaviour
 
     private void ApplyPlayablePolicy(bool playable)
     {
-        if (_stopAgentWhenNotPlayable)
+        if (!_stopAgentWhenNotPlayable || _agent == null || !_agent.enabled) return;
+
+        if (!playable)
         {
-            if (!playable)
-            {
-                if (_agent.enabled)
-                {
-                    _agent.isStopped = true;
-                    if (_resetPathWhenNotPlayable)
-                        _agent.ResetPath();
-                }
-            }
-            else
-            {
-                if (_agent.enabled)
-                {
-                    _agent.isStopped = false;
-                    if (_hasTarget)
-                        _agent.SetDestination(_target.position);
-                }
-            }
+            _agent.isStopped = true;
+            if (_resetPathWhenNotPlayable)
+                _agent.ResetPath();
+        }
+        else
+        {
+            _agent.isStopped = false;
+            if (_hasTarget)
+                _agent.SetDestination(_target.position);
         }
     }
     #endregion
