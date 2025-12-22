@@ -7,12 +7,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
-public class EnemyAnimEventBridge : MonoBehaviour
+public class EnemyBruiserAnimEventBridge : MonoBehaviour
 {
     [Header("Default Receivers (Optional)")]
-    [SerializeField] private MonoBehaviour[] _defaultReceivers; // IEnemyAnimEventListener 구현체만 넣어라
+    [SerializeField] private MonoBehaviour[] _defaultReceivers; // IEnemyBruiserAnimEventListener 구현체만 넣어라
 
-    private readonly List<IEnemyAnimEventListener> _listeners = new List<IEnemyAnimEventListener>(8);
+    private readonly List<IEnemyBruiserAnimEventListener> _listeners = new List<IEnemyBruiserAnimEventListener>(8);
 
     private void Awake()
     {
@@ -24,21 +24,21 @@ public class EnemyAnimEventBridge : MonoBehaviour
             var mb = _defaultReceivers[i];
             if (mb == null) continue;
 
-            if (mb is IEnemyAnimEventListener l)
+            if (mb is IEnemyBruiserAnimEventListener l)
                 AddListener(l);
             else
-                Debug.LogWarning($"[EnemyAnimEventBridge] Receiver does not implement IEnemyAnimEventListener: {mb.name}", mb);
+                Debug.LogWarning($"[EnemyBruiserAnimEventBridge] Receiver does not implement IEnemyBruiserAnimEventListener: {mb.name}", mb);
         }
     }
 
-    public void AddListener(IEnemyAnimEventListener listener)
+    public void AddListener(IEnemyBruiserAnimEventListener listener)
     {
         if (listener == null) return;
         if (_listeners.Contains(listener)) return;
         _listeners.Add(listener);
     }
 
-    public void RemoveListener(IEnemyAnimEventListener listener)
+    public void RemoveListener(IEnemyBruiserAnimEventListener listener)
     {
         if (listener == null) return;
         _listeners.Remove(listener);

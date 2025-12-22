@@ -1,4 +1,4 @@
-public interface IEnemyAnimEventListener
+public interface IEnemyBruiserAnimEventListener
 {
     void OnAttackHitboxOnAll();
     void OnAttackHitboxOffAll();

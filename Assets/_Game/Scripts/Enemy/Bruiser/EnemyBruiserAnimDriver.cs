@@ -46,14 +46,14 @@ using UnityEngine;
 using UnityEngine.AI;
 
 [DisallowMultipleComponent]
-public class EnemyBruiserAnimDriver : MonoBehaviour, IEnemyAnimEventListener
+public class EnemyBruiserAnimDriver : MonoBehaviour, IEnemyBruiserAnimEventListener
 {
     [Header("Refs")]
     [SerializeField] private Animator _animator;
     [SerializeField] private NavMeshAgent _agent; // 없으면 이동 판정이 약해짐(가능하면 연결)
 
     [Header("Anim Event Bridge")]
-    [SerializeField] private EnemyAnimEventBridge _animBridge;
+    [SerializeField] private EnemyBruiserAnimEventBridge _animBridge;
 
     [Header("Hitboxes (Multiple)")]
     [Tooltip("양손/무기 등 여러 Hitbox를 넣는다. 각 Hitbox는 Trigger Collider여야 한다.")]
@@ -95,19 +95,19 @@ public class EnemyBruiserAnimDriver : MonoBehaviour, IEnemyAnimEventListener
     private readonly HashSet<Health> _sharedHitSet = new HashSet<Health>();
 
     // Animator hashes
-    private static readonly int _hashIsMoving = Animator.StringToHash("IsMoving");
-    private static readonly int _hashIsDead = Animator.StringToHash("IsDead");
-    private static readonly int _hashDoAttack = Animator.StringToHash("DoAttack");
-    private static readonly int _hashDoHit = Animator.StringToHash("DoHit");
-    private static readonly int _hashHitIndex = Animator.StringToHash("HitIndex");
-    private static readonly int _hashDieIndex = Animator.StringToHash("DieIndex");
-    private static readonly int _hashAttackSpeed = Animator.StringToHash("AttackSpeed");
+    private readonly int _hashIsMoving = Animator.StringToHash("IsMoving");
+    private readonly int _hashIsDead = Animator.StringToHash("IsDead");
+    private readonly int _hashDoAttack = Animator.StringToHash("DoAttack");
+    private readonly int _hashDoHit = Animator.StringToHash("DoHit");
+    private readonly int _hashHitIndex = Animator.StringToHash("HitIndex");
+    private readonly int _hashDieIndex = Animator.StringToHash("DieIndex");
+    private readonly int _hashAttackSpeed = Animator.StringToHash("AttackSpeed");
 
     private void Awake()
     {
         if (_animator == null) _animator = GetComponentInChildren<Animator>();
         if (_agent == null) _agent = GetComponent<NavMeshAgent>();
-        if (_animBridge == null) _animBridge = GetComponentInChildren<EnemyAnimEventBridge>(true);
+        if (_animBridge == null) _animBridge = GetComponentInChildren<EnemyBruiserAnimEventBridge>(true);
 
         _health = GetComponent<Health>();
         _chaser = GetComponent<EnemyChaser>();

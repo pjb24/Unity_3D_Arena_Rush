@@ -9,8 +9,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Xml;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [DisallowMultipleComponent]
 public class Projectile : MonoBehaviour
@@ -124,8 +124,6 @@ public class Projectile : MonoBehaviour
 
     private void OnDisable()
     {
-        // 다음 스폰 대비 충돌 복원
-        IgnoreOwnerColliders(false);
         _initialized = false;
         _owner = null;
 
@@ -334,6 +332,21 @@ public class Projectile : MonoBehaviour
         }
     }
 
+    private bool IsSceneCollider(Collider col)
+    {
+        if (col == null) return false;
+        if (!col.gameObject) return false;
+
+        Scene s = col.gameObject.scene;
+        return s.IsValid() && s.isLoaded;   // Prefab Asset이면 IsValid=false
+    }
+
+    private void SafeIgnoreCollision(Collider a, Collider b, bool ignore)
+    {
+        if (!IsSceneCollider(a) || !IsSceneCollider(b)) return;
+        Physics.IgnoreCollision(a, b, ignore);
+    }
+
     private void IgnoreOwnerColliders(bool ignore)
     {
         if (_owner == null || _col == null) return;
@@ -344,7 +357,7 @@ public class Projectile : MonoBehaviour
         foreach (var oc in ownerCols)
         {
             if (oc == null || oc == _col) continue;
-            Physics.IgnoreCollision(_col, oc, ignore);
+            SafeIgnoreCollision(_col, oc, ignore);
             if (ignore && !_ignored.Contains(oc)) _ignored.Add(oc);
         }
 
@@ -352,7 +365,7 @@ public class Projectile : MonoBehaviour
         {
             foreach (var oc in _ignored)
             {
-                if (oc != null) Physics.IgnoreCollision(_col, oc, false);
+                if (oc != null) SafeIgnoreCollision(_col, oc, false);
             }
             _ignored.Clear();
         }
