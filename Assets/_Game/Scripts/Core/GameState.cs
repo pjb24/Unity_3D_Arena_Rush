@@ -255,6 +255,27 @@ public class GameState : MonoBehaviour
 
     private void HandleWaveCleared(int wave)
     {
+        // WaveConfig로 준비된 웨이브를 전부 클리어하면 런 종료 (GameOver)
+        // wave는 1-based로 들어온다는 전제 (StartRun(1) 사용 중)
+
+        int total = (_waveManager != null) ? _waveManager.TotalWaves : 0;
+
+        // WaveManager가 TotalWave를 제공하지 못하는 상황 방지
+        if (total <= 0)
+        {
+            // 기존 동작 유지(개발 중 안전장치)
+            OpenPerkSelect();
+
+            return;
+        }
+
+        if (wave >= total)
+        {
+            TriggerGameOver("AllWavesCleared");
+
+            return;
+        }
+
         OpenPerkSelect();
     }
 

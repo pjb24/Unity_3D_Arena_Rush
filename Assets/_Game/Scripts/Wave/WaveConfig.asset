@@ -16,8 +16,8 @@ MonoBehaviour:
   - name: Wave 1
     waveStartDelay: 0.1
     groups:
-    - prefab: {fileID: 3352744809097980956, guid: 01cf38198dc8d964b96ce4440b65830c, type: 3}
-      count: 4
+    - prefab: {fileID: 7534088596184383904, guid: 49ad63047a930f843a8ff9a49644161e, type: 3}
+      count: 3
       interval: 0.1
       startDelay: 0
     isBossWave: 0
@@ -39,7 +39,74 @@ MonoBehaviour:
     waveStartDelay: 1
     groups:
     - prefab: {fileID: 3352744809097980956, guid: 01cf38198dc8d964b96ce4440b65830c, type: 3}
+      count: 3
+      interval: 0.1
+      startDelay: 0
+    isBossWave: 0
+    bossPrefab: {fileID: 0}
+    bossCount: 0
+    bossInterval: 0
+  - name: Wave 4
+    waveStartDelay: 1
+    groups:
+    - prefab: {fileID: 7534088596184383904, guid: 49ad63047a930f843a8ff9a49644161e, type: 3}
+      count: 3
+      interval: 0.1
+      startDelay: 0
+    - prefab: {fileID: 3352744809097980956, guid: 01cf38198dc8d964b96ce4440b65830c, type: 3}
       count: 2
+      interval: 0.1
+      startDelay: 0
+    isBossWave: 0
+    bossPrefab: {fileID: 0}
+    bossCount: 0
+    bossInterval: 0
+  - name: Wave 5
+    waveStartDelay: 1
+    groups:
+    - prefab: {fileID: 7534088596184383904, guid: 49ad63047a930f843a8ff9a49644161e, type: 3}
+      count: 10
+      interval: 0.1
+      startDelay: 0
+    isBossWave: 0
+    bossPrefab: {fileID: 0}
+    bossCount: 0
+    bossInterval: 0
+  - name: Wave 6
+    waveStartDelay: 1
+    groups:
+    - prefab: {fileID: 7534088596184383904, guid: 49ad63047a930f843a8ff9a49644161e, type: 3}
+      count: 10
+      interval: 0.1
+      startDelay: 0
+    - prefab: {fileID: 7534088596184383904, guid: 49ad63047a930f843a8ff9a49644161e, type: 3}
+      count: 10
+      interval: 0.1
+      startDelay: 5
+    isBossWave: 0
+    bossPrefab: {fileID: 0}
+    bossCount: 0
+    bossInterval: 0
+  - name: Wave 7
+    waveStartDelay: 1
+    groups:
+    - prefab: {fileID: 3352744809097980956, guid: 01cf38198dc8d964b96ce4440b65830c, type: 3}
+      count: 10
+      interval: 0.1
+      startDelay: 0
+    isBossWave: 0
+    bossPrefab: {fileID: 0}
+    bossCount: 0
+    bossInterval: 0
+  - name: Wave 8
+    waveStartDelay: 1
+    groups:
+    - prefab: {fileID: 7534088596184383904, guid: 49ad63047a930f843a8ff9a49644161e, type: 3}
+      count: 10
+      interval: 0.1
+      startDelay: 0
+    - prefab: {fileID: 3352744809097980956, guid: 01cf38198dc8d964b96ce4440b65830c, type: 3}
+      count: 10
       interval: 0.1
       startDelay: 0
     isBossWave: 0

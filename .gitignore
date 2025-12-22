@@ -101,3 +101,7 @@ InitTestScene*.unity*
 /Images
 /Assets/Packages
 /Assets/Packages.meta
+
+/WebGL Builds/
+/connectwebgl.zip
+/webgl_sharing

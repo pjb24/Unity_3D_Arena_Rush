@@ -36,6 +36,8 @@ public class WaveManager : MonoBehaviour
 
     private GameState _gs;
 
+    public int TotalWaves => (_config != null) ? _config.waves.Count : 0;
+
     private void Awake()
     {
         _gs = FindAnyObjectByType<GameState>();
