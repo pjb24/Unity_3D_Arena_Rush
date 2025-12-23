@@ -3,9 +3,9 @@
 // - Parameters:
 //   Bool   : IsMoving, IsDead
 //   Trigger: DoFire, DoHit
-//   Int    : HitIndex(0~2), DieIndex(0~2)
+//   Int    : HitIndex(0~2)
 //   Float  : FirePlaySpeed  (Fire state의 Speed Multiplier에 연결)
-// - Priority: Die > Hit > Fire > Locomotion
+// - Priority: Hit > Fire > Locomotion
 //
 // 동작
 // - EnemyShooter.FireLockTime 동안 Fire 애니가 끝나도록 FirePlaySpeed를 계산해 세팅 후 DoFire 트리거
@@ -45,7 +45,6 @@ public class EnemyShooterAnimDriver : MonoBehaviour, IEnemyShooterAnimEventListe
 
     [Header("Random Variation")]
     [SerializeField] private bool _avoidSameHitTwice = true;
-    [SerializeField] private bool _avoidSameDieTwice = true;
 
     // ===== Animator Hashes =====
     private readonly int _hashIsMoving = Animator.StringToHash("IsMoving");
@@ -53,14 +52,12 @@ public class EnemyShooterAnimDriver : MonoBehaviour, IEnemyShooterAnimEventListe
     private readonly int _hashDoFire = Animator.StringToHash("DoFire");
     private readonly int _hashDoHit = Animator.StringToHash("DoHit");
     private readonly int _hashHitIndex = Animator.StringToHash("HitIndex");
-    private readonly int _hashDieIndex = Animator.StringToHash("DieIndex");
     private int _hashFirePlaySpeed;
 
     // ===== Runtime =====
     private bool _isDead;
     private Vector3 _prevPos;
     private int _lastHitIndex = 0;
-    private int _lastDieIndex = 0;
 
     private void Reset()
     {
@@ -227,14 +224,10 @@ public class EnemyShooterAnimDriver : MonoBehaviour, IEnemyShooterAnimEventListe
 
         _isDead = true;
 
-        int dieIndex = PickIndex0To2(_avoidSameDieTwice ? _lastDieIndex : 0);
-        _lastDieIndex = dieIndex;
-
         // Die 최우선 고정
         _animator.ResetTrigger(_hashDoFire);
         _animator.ResetTrigger(_hashDoHit);
 
-        _animator.SetInteger(_hashDieIndex, dieIndex);
         _animator.SetBool(_hashIsDead, true);
         _animator.SetBool(_hashIsMoving, false);
     }

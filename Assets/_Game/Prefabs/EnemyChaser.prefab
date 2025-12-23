@@ -246,6 +246,8 @@ MonoBehaviour:
   _topDown: 1
   _repathInterval: 0.1
   _stoppingDistance: 1.2
+  _rotationSpeed: 720
+  _instantRotateOnAttack: 1
   _attackRange: 1.5
   _attackCooldown: 0.8
   _damage: 10
@@ -494,6 +496,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 70e1d85354beed14cbbfd47e6c3759b7, type: 2}
+    - target: {fileID: 5866666021909216657, guid: 0a77e1b7385f1214088c08c83d5af7c7, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:

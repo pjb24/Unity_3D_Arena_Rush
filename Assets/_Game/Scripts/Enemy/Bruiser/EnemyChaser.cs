@@ -8,9 +8,10 @@
 /// - 탑다운 환경(updateUpAxis 옵션) 대응
 /// </summary>
 
+using NUnit.Framework.Interfaces;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
-using System.Collections;
 
 [RequireComponent(typeof(NavMeshAgent))]
 [RequireComponent(typeof(Health))]
@@ -25,6 +26,10 @@ public class EnemyChaser : MonoBehaviour
     [SerializeField] private bool _topDown = true;          // 탑다운(평면) 환경이면 true
     [SerializeField] private float _repathInterval = 0.1f;  // 목적지 재설정 간격(초)
     [SerializeField] private float _stoppingDistance = 1.2f;// 이동 정지 거리(에이전트)
+
+    [Header("Rotation")]
+    [SerializeField] private float _rotationSpeed = 720f;   // 이동 중 회전 속도(도/초)
+    [SerializeField] private bool _instantRotateOnAttack = true; // 공격 시 즉시 스냅 회전
 
     [Header("Attack (Melee)")]
     [SerializeField] private float _attackRange = 1.5f;     // 중심-대상 거리
@@ -93,11 +98,13 @@ public class EnemyChaser : MonoBehaviour
     {
         _agent = GetComponent<NavMeshAgent>();
 
+        // NavMeshAgent의 회전은 쓰지 않고, 항상 수동 회전
+        _agent.updateRotation = false;
+
         // 탑다운 3D(수평 평면) 환경 대응
         if (_topDown)
         {
             _agent.updateUpAxis = false; // 수직축 고정
-            _agent.updateRotation = true; // 필요시 false 후 수동 회전도 가능
         }
 
         _agent.stoppingDistance = _stoppingDistance;
@@ -131,8 +138,7 @@ public class EnemyChaser : MonoBehaviour
         _isAttacking = false;
 
         // Agent 초기화(풀링 복원 대비)
-        _agent.isStopped = false;
-        _agent.ResetPath();
+        ResetState();
         // 위치/회전은 풀링 매니저가 되돌린 상태로 가정
 
         if (_health != null)
@@ -182,6 +188,8 @@ public class EnemyChaser : MonoBehaviour
         // 공격 중이면: 이동 정지 유지(애니 이벤트로 종료됨)
         if (_isAttacking)
         {
+            // 공격 애니메이션 동안 측면을 보는 문제 방지
+            UpdateFacing(_instantRotateOnAttack);
             StopChase();
             return;
         }
@@ -192,6 +200,9 @@ public class EnemyChaser : MonoBehaviour
             float dist = Vector3.Distance(transform.position, _target.position);
             if (dist <= _attackRange)
             {
+                // 공격 들어가기 직전, 강제로 플레이어 쪽 보게 스냅 or 빠른 회전
+                UpdateFacing(_instantRotateOnAttack);
+
                 if (!_useLOS || HasLineOfSight(transform.position, _target.position))
                 {
                     StopChase();
@@ -202,6 +213,13 @@ public class EnemyChaser : MonoBehaviour
             }
         }
 
+        // 이동/대기 상태에서도 항상 플레이어를 향하도록 회전
+        // (공격 범위 밖 추적 중 포함)
+        //if (!_isKnockback) // 넉백 중에는 회전 고정하고 싶으면 이 조건 유지
+        {
+            UpdateFacing(false);
+        }
+
         // 경로 갱신(스파이크 방지용 간격)
         // 공격 거리 밖: 추적
         _repathTimer -= Time.deltaTime;
@@ -210,7 +228,9 @@ public class EnemyChaser : MonoBehaviour
             _repathTimer = Mathf.Max(0.02f, _repathInterval);
             // SetDestination 비용 분산을 위해 간헐 갱신
             if (_agent.enabled)
+            {
                 _agent.SetDestination(_target.position);
+            }
         }
     }
 
@@ -235,6 +255,12 @@ public class EnemyChaser : MonoBehaviour
         _isAttacking = false;
 
         if (!_hasTarget || !_agent.enabled) return;
+
+        // 공격 종료 시점에도 다시 한번 플레이어를 향해 정렬
+        if (_instantRotateOnAttack)
+        {
+            UpdateFacing(true);
+        }
 
         float dist = Vector3.Distance(transform.position, _target.position);
 
@@ -270,6 +296,9 @@ public class EnemyChaser : MonoBehaviour
             _agent.isStopped = false;
             _agent.ResetPath();
             _agent.SetDestination(_target.position);
+
+            // 타깃 바뀌는 즉시 방향 정렬
+            UpdateFacing(true);
         }
     }
 
@@ -291,6 +320,47 @@ public class EnemyChaser : MonoBehaviour
         _repathTimer = 0f;
         _agent.isStopped = false;
         _agent.ResetPath();
+        _isAttacking = false;
+        _isKnockback = false;
+    }
+    #endregion
+
+    #region Internal Rotation
+    /// <summary>
+    /// 플레이어를 바라보도록 회전.
+    /// forceInstant = true면 즉시 스냅, false면 _rotationSpeed로 스무스 회전.
+    /// </summary>
+    private void UpdateFacing(bool forceInstant)
+    {
+        if (!_hasTarget)
+            return;
+
+        Vector3 dir = _target.position - transform.position;
+
+        if (_topDown)
+        {
+            // 탑다운 환경에서는 Y를 고정하고 수평면에서만 회전
+            dir.y = 0f;
+        }
+
+        if (dir.sqrMagnitude < 0.0001f)
+            return;
+
+        dir.Normalize();
+
+        Quaternion targetRot = Quaternion.LookRotation(dir, Vector3.up);
+
+        if (forceInstant || _rotationSpeed <= 0f)
+        {
+            transform.rotation = targetRot;
+        }
+        else
+        {
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                targetRot,
+                _rotationSpeed * Time.deltaTime);
+        }
     }
     #endregion
 

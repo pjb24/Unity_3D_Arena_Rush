@@ -3,13 +3,12 @@
 // Parameters:
 //  Bool   : IsMoving, IsDead
 //  Trigger: DoAttack, DoHit
-//  Int    : HitIndex (0~2), DieIndex (0~2)
+//  Int    : HitIndex (0~2)
 //  Float  : AttackSpeed (Attack State Speed Multiplier)
 //
 // Integration:
 // - NavMeshAgent velocity/desireVelocity로 이동 판정
 // - Health OnDamaged → Hit 랜덤 분기 + Trigger
-// - Health OnDeath   → Die 랜덤 분기 + Dead 락
 // - EnemyChaser 공격 성공 프레임에 NotifyAttack(attackCooldown) 호출
 //   => AttackSpeed를 계산해 Attack 애니가 attackCooldown 안에 끝나도록 보정
 //
@@ -87,7 +86,6 @@ public class EnemyBruiserAnimDriver : MonoBehaviour, IEnemyBruiserAnimEventListe
     private bool _isDead;
 
     private int _lastHitIndex = 0;
-    private int _lastDieIndex = 0;
 
     private float _attackClipLength = 0.5f;
 
@@ -100,7 +98,6 @@ public class EnemyBruiserAnimDriver : MonoBehaviour, IEnemyBruiserAnimEventListe
     private readonly int _hashDoAttack = Animator.StringToHash("DoAttack");
     private readonly int _hashDoHit = Animator.StringToHash("DoHit");
     private readonly int _hashHitIndex = Animator.StringToHash("HitIndex");
-    private readonly int _hashDieIndex = Animator.StringToHash("DieIndex");
     private readonly int _hashAttackSpeed = Animator.StringToHash("AttackSpeed");
 
     private void Awake()
@@ -126,7 +123,6 @@ public class EnemyBruiserAnimDriver : MonoBehaviour, IEnemyBruiserAnimEventListe
     {
         _isDead = false;
         _lastHitIndex = 0;
-        _lastDieIndex = 0;
 
         if (_animBridge != null)
             _animBridge.AddListener(this);
@@ -136,7 +132,6 @@ public class EnemyBruiserAnimDriver : MonoBehaviour, IEnemyBruiserAnimEventListe
             _animator.SetBool(_hashIsDead, false);
             _animator.SetBool(_hashIsMoving, false);
             _animator.SetInteger(_hashHitIndex, 0);
-            _animator.SetInteger(_hashDieIndex, 0);
 
             // 기본 공격 속도는 1
             _animator.SetFloat(_hashAttackSpeed, 1f);
@@ -345,14 +340,9 @@ public class EnemyBruiserAnimDriver : MonoBehaviour, IEnemyBruiserAnimEventListe
     {
         _isDead = true;
 
-        int dieIndex = RollIndex0To2(ref _lastDieIndex);
-        _animator.SetInteger(_hashDieIndex, dieIndex);
-
         _animator.SetBool(_hashIsDead, true);
 
         EndAllHitboxes();
-
-        if (_log) Debug.Log($"[{name}] Die Trigger (index={dieIndex})");
     }
 
     private int RollIndex0To2(ref int last)
