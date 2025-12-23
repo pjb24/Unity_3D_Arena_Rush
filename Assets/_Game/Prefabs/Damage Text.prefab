@@ -150,7 +150,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _text: {fileID: 769058801683134931}
-  _lifetime: 3
+  _lifetime: 0.3
   _riseSpeed: 1.5
   _gravity: 0
   _alphaCurve:
@@ -158,7 +158,7 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
+      value: 0.5
       inSlope: 0
       outSlope: 0
       tangentMode: 0

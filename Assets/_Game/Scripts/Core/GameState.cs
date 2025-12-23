@@ -35,6 +35,9 @@ public class GameState : MonoBehaviour
     public GameEventSO OnPerkSelectOpenedEvent;       // Perk 선택 화면 열림 이벤트
     public GameEventSO_GameOverInfo OnGameOverEvent;               // 게임오버 이벤트
 
+    [Header("Point Lock")]
+    [SerializeField] private WebGLPointerLockAndFakeCursor _pointerLock;
+
     // ===== Config =====
     [Header("Config")]
     [SerializeField] private bool _autoStartOnAwake = true;
@@ -146,11 +149,14 @@ public class GameState : MonoBehaviour
 
         ChangeState(GameStateSO.E_GamePlayState.PerkSelect);
         OnPerkSelectOpenedEvent.Raise();
+
+        _pointerLock.EnterUiFree();
     }
 
     /// <summary>Perk 선택 확정 → Playing 복귀</summary>
     public void HandlePerkSelectConfirmed()
     {
+        _pointerLock.EnterAimLocked();
         ChangeState(GameStateSO.E_GamePlayState.Playing);
     }
 
