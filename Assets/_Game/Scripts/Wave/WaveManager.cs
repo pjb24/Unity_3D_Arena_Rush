@@ -36,7 +36,7 @@ public class WaveManager : MonoBehaviour
 
     private GameState _gs;
 
-    public int TotalWaves => (_config != null) ? _config.waves.Count : 0;
+    public int TotalWaves => (_config != null) ? _config.waves.Count - 1 : 0;
 
     private void Awake()
     {
@@ -109,6 +109,7 @@ public class WaveManager : MonoBehaviour
             yield return new WaitUntil(() => _alive <= 0);
 
             Debug.Log("Wave " + _config.waves[i].name + " Cleared");
+            _gs.SetClearedWave(i + 1);
             OnWaveClearedEvent.Raise(i);
 
             // GameState를 통한 PerkSelect → Playing 복귀까지 대기

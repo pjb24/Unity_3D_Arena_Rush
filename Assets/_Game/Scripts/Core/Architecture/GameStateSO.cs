@@ -25,6 +25,7 @@ public class GameStateSO : ScriptableObject
     public bool IsInputLocked = false; // PerkSelect/Paused/GameOver에서 true
     public int CurrentWave = 0;
     public int EnemiesAlive = 0;
+    public int ClearedWave = 0;
 
     // ===== Default Values (Editor Persistence Problem 해결용) =====
     [Header("Default Values")]
@@ -38,6 +39,7 @@ public class GameStateSO : ScriptableObject
         IsInputLocked = false;
         CurrentWave = 0;
         EnemiesAlive = 0;
+        ClearedWave = 0;
     }
 
     public bool IsPlayable()

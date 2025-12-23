@@ -36,7 +36,7 @@ public class GameState : MonoBehaviour
     public GameEventSO_GameOverInfo OnGameOverEvent;               // 게임오버 이벤트
 
     [Header("Point Lock")]
-    [SerializeField] private WebGLPointerLockAndFakeCursor _pointerLock;
+    [SerializeField] private WebGLPointerLock _pointerLock;
 
     // ===== Config =====
     [Header("Config")]
@@ -142,6 +142,11 @@ public class GameState : MonoBehaviour
         _gameStateData.EnemiesAlive = count;
     }
 
+    public void SetClearedWave(int wave)
+    {
+        _gameStateData.ClearedWave = wave;
+    }
+
     /// <summary>Perk 선택 화면 열기(웨이브 클리어 시 호출)</summary>
     public void OpenPerkSelect()
     {
@@ -181,12 +186,12 @@ public class GameState : MonoBehaviour
         int bestWave = PlayerPrefs.GetInt(_PP_BestWave, 0);
         float bestTime = PlayerPrefs.GetFloat(_PP_BestTime, 0);
 
-        bool newBestWave = _gameStateData.CurrentWave > bestWave;
+        bool newBestWave = _gameStateData.ClearedWave > bestWave;
         bool newBestTime = survived > bestTime;
 
         if (newBestWave)
         {
-            bestWave = _gameStateData.CurrentWave;
+            bestWave = _gameStateData.ClearedWave;
             PlayerPrefs.SetInt(_PP_BestWave, bestWave);
         }
         if (newBestTime)
@@ -198,7 +203,7 @@ public class GameState : MonoBehaviour
 
         var info = new GameOverInfo
         {
-            wave = _gameStateData.CurrentWave,
+            wave = _gameStateData.ClearedWave,
             survivedSeconds = survived,
             reason = reason,
             bestWave = bestWave,
@@ -212,6 +217,8 @@ public class GameState : MonoBehaviour
 
         _gameStateData.IsRunActive = false;
         OnRunEndedEvent.Raise();   // 런 종료 이벤트 방송
+
+        _pointerLock.EnterUiFree();
     }
 
     /// <summary>씬 리로드 기반 재시작. (필요 시 외부에서 UI 버튼으로 연결)</summary>
