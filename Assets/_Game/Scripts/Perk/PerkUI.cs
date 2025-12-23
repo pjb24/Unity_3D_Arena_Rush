@@ -74,7 +74,7 @@ public class PerkUI : MonoBehaviour
             // PerkSelect 진입 시 열기
             _gs.OnPerkSelectOpenedEvent.AddListener(HandlePerkSelectOpened);
             // 상태 변화 감시: PerkSelect 벗어나면 닫기(Playing/GameOver/Paused 등)
-            _gs.OnStateChangedEvent.AddListener(HandleStateChanged);
+            _gs.AddListenerStateChanged(HandleStateChanged);
         }
     }
 
@@ -85,7 +85,7 @@ public class PerkUI : MonoBehaviour
             // PerkSelect 진입 시 열기
             _gs.OnPerkSelectOpenedEvent.RemoveListener(HandlePerkSelectOpened);
             // 상태 변화 감시: PerkSelect 벗어나면 닫기(Playing/GameOver/Paused 등)
-            _gs.OnStateChangedEvent.RemoveListener(HandleStateChanged);
+            _gs.RemoveListenerStateChanged(HandleStateChanged);
         }
     }
 

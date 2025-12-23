@@ -24,9 +24,6 @@ public sealed class WebGLPointerLock : MonoBehaviour
     [SerializeField] private KeyCode _keyUnlock = KeyCode.Escape; // ESC로 무조건 UI 모드
     [SerializeField] private bool _allowRelockByClick = true;     // UI 모드에서 클릭으로 재잠금
 
-    [Header("Fake Cursor")]
-    [SerializeField] private float _uiSensitivity = 1.0f;
-
     [Header("Runtime")]
     [SerializeField] private E_Mode _mode;
 

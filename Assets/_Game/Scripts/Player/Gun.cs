@@ -93,7 +93,7 @@ public class Gun : MonoBehaviour
 
         if (_gs != null)
         {
-            _gs.OnStateChangedEvent.AddListener(OnGameStateChanged);
+            _gs.AddListenerStateChanged(OnGameStateChanged);
             OnGameStateChanged(_gs.PreviousState(), _gs.CurrentState());
         }
     }
@@ -105,7 +105,7 @@ public class Gun : MonoBehaviour
 
         if (_gs != null)
         {
-            _gs.OnStateChangedEvent.RemoveListener(OnGameStateChanged);
+            _gs.RemoveListenerStateChanged(OnGameStateChanged);
         }
     }
 

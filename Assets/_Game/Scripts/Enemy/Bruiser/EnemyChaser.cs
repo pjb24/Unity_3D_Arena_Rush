@@ -119,7 +119,7 @@ public class EnemyChaser : MonoBehaviour
         // GameState 구독
         if (_gs != null)
         {
-            _gs.OnStateChangedEvent.AddListener(OnGameStateChanged);
+            _gs.AddListenerStateChanged(OnGameStateChanged);
         }
 
         // 타깃 캐싱
@@ -159,7 +159,7 @@ public class EnemyChaser : MonoBehaviour
 
         if (_gs != null)
         {
-            _gs.OnStateChangedEvent.RemoveListener(OnGameStateChanged);
+            _gs.RemoveListenerStateChanged(OnGameStateChanged);
         }
     }
 

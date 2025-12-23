@@ -29,7 +29,6 @@ public class GameState : MonoBehaviour
     [SerializeField] private GameStateSO _gameStateData; // 씬에서 생성된 GameState.asset 연결
 
     [Header("ScriptableObject Events")]
-    public GameEventSO_StateChanged OnStateChangedEvent; // 상태 변경 이벤트
     public GameEventSO OnRunStartedEvent;             // 런 시작 이벤트
     public GameEventSO OnRunEndedEvent;               // 런 종료 이벤트
     public GameEventSO OnPerkSelectOpenedEvent;       // Perk 선택 화면 열림 이벤트
@@ -40,7 +39,6 @@ public class GameState : MonoBehaviour
 
     // ===== Config =====
     [Header("Config")]
-    [SerializeField] private bool _autoStartOnAwake = true;
     [SerializeField] private bool _dontDestroyOnLoad = true;
     [SerializeField] private bool _useTimeScalePause = true;
     [SerializeField, Range(0f, 1f)] private float _pausedTimeScale = 0f;
@@ -63,6 +61,10 @@ public class GameState : MonoBehaviour
     // PlayerPrefs Keys
     private const string _PP_BestWave = "AR_BestWave";
     private const string _PP_BestTime = "AR_BestTime";
+
+    private Action<GameStateSO.E_GamePlayState, GameStateSO.E_GamePlayState> _onStateChangedEvent; // 상태 변경 이벤트
+    public void AddListenerStateChanged(Action<GameStateSO.E_GamePlayState, GameStateSO.E_GamePlayState> listener) => _onStateChangedEvent += listener;
+    public void RemoveListenerStateChanged(Action<GameStateSO.E_GamePlayState, GameStateSO.E_GamePlayState> listener) => _onStateChangedEvent -= listener;
 
     private void Awake()
     {
@@ -93,6 +95,8 @@ public class GameState : MonoBehaviour
         _waveManager.OnWaveClearedEvent.AddListener(HandleWaveCleared);
         _waveManager.OnEnemySpawnedEvent.AddListener(HandleEnemySpawned);
         _waveManager.OnEnemyDiedEvent.AddListener(HandleEnemyDied);
+
+        SetPaused(true);
     }
 
     private void OnDisable()
@@ -105,15 +109,12 @@ public class GameState : MonoBehaviour
         _waveManager.OnEnemyDiedEvent.RemoveListener(HandleEnemyDied);
     }
 
-    private void Start()
-    {
-        if (_autoStartOnAwake)
-        {
-            StartRun(1);
-        }
-    }
-
     // ===== Public API (GameStateSO 데이터를 조작하고 이벤트 방송) =====
+
+    public void StartGame()
+    {
+        StartRun();
+    }
 
     /// <summary>런 시작. waveStart부터 진행.</summary>
     public void StartRun(int waveStart = 1)
@@ -163,6 +164,16 @@ public class GameState : MonoBehaviour
     {
         _pointerLock.EnterAimLocked();
         ChangeState(GameStateSO.E_GamePlayState.Playing);
+    }
+
+    public void PauseGame()
+    {
+        SetPaused(true);
+    }
+
+    public void ResumeGame()
+    {
+        SetPaused(false);
     }
 
     /// <summary>일시정지/해제</summary>
@@ -232,7 +243,7 @@ public class GameState : MonoBehaviour
         }
 
         // 씬 리로드 없이 런만 리셋하고 싶다면 외부 시스템(Wave/Enemies/Player) 초기화 후:
-        StartRun(1);
+        StartRun();
     }
 
     public bool IsPlayable()
@@ -319,7 +330,7 @@ public class GameState : MonoBehaviour
         ApplyTimeScaleForState(_gameStateData.CurrentState);
 
         // 상태 변경 이벤트 방송
-        OnStateChangedEvent.Raise(_gameStateData.PreviousState, _gameStateData.CurrentState);
+        _onStateChangedEvent.Invoke(_gameStateData.PreviousState, _gameStateData.CurrentState);
 
 #if UNITY_EDITOR
         // 디버깅 로그
@@ -354,7 +365,7 @@ public class GameState : MonoBehaviour
 
         if (Input.GetKeyDown(_keyStartRun))
         {
-            if (!_gameStateData.IsRunActive) StartRun(1);
+            if (!_gameStateData.IsRunActive) StartRun();
         }
         if (Input.GetKeyDown(_keyOpenPerk))
         {
