@@ -81,10 +81,6 @@ public class GameState : MonoBehaviour
         _perkUI = FindAnyObjectByType<PerkUI>();
         _playerController = FindAnyObjectByType<PlayerController>();
         _waveManager = FindAnyObjectByType<WaveManager>();
-
-        // 초기 상태
-        ChangeState(GameStateSO.E_GamePlayState.Boot);
-        ApplyTimeScaleForState(_gameStateData.CurrentState);
     }
 
     private void OnEnable()
@@ -95,8 +91,6 @@ public class GameState : MonoBehaviour
         _waveManager.OnWaveClearedEvent.AddListener(HandleWaveCleared);
         _waveManager.OnEnemySpawnedEvent.AddListener(HandleEnemySpawned);
         _waveManager.OnEnemyDiedEvent.AddListener(HandleEnemyDied);
-
-        SetPaused(true);
     }
 
     private void OnDisable()
@@ -107,6 +101,13 @@ public class GameState : MonoBehaviour
         _waveManager.OnWaveClearedEvent.RemoveListener(HandleWaveCleared);
         _waveManager.OnEnemySpawnedEvent.RemoveListener(HandleEnemySpawned);
         _waveManager.OnEnemyDiedEvent.RemoveListener(HandleEnemyDied);
+    }
+
+    private void Start()
+    {
+        // 초기 상태
+        ChangeState(GameStateSO.E_GamePlayState.Boot);
+        ApplyTimeScaleForState(_gameStateData.CurrentState);
     }
 
     // ===== Public API (GameStateSO 데이터를 조작하고 이벤트 방송) =====
@@ -323,6 +324,7 @@ public class GameState : MonoBehaviour
 
         // 입력 잠금 규칙 업데이트
         _gameStateData.IsInputLocked = (_gameStateData.CurrentState == GameStateSO.E_GamePlayState.PerkSelect) ||
+                        (_gameStateData.CurrentState == GameStateSO.E_GamePlayState.Boot) ||
                         (_gameStateData.CurrentState == GameStateSO.E_GamePlayState.Paused) ||
                         (_gameStateData.CurrentState == GameStateSO.E_GamePlayState.GameOver);
 
@@ -347,6 +349,7 @@ public class GameState : MonoBehaviour
 
         switch (s)
         {
+            case GameStateSO.E_GamePlayState.Boot:
             case GameStateSO.E_GamePlayState.PerkSelect:
             case GameStateSO.E_GamePlayState.Paused:
             case GameStateSO.E_GamePlayState.GameOver:

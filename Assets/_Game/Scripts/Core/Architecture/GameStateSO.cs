@@ -8,17 +8,18 @@ public class GameStateSO : ScriptableObject
     // ===== States =====
     public enum E_GamePlayState
     {
-        Boot = 0,
-        Playing = 1,
-        PerkSelect = 2,
-        Paused = 3,
-        GameOver = 4,
+        None = 0,
+        Boot = 1,
+        Playing = 2,
+        PerkSelect = 3,
+        Paused = 4,
+        GameOver = 5,
     }
 
     // ===== Runtime Data =====
     [Header("State")]
-    public E_GamePlayState CurrentState = E_GamePlayState.Boot;
-    public E_GamePlayState PreviousState = E_GamePlayState.Boot;
+    public E_GamePlayState CurrentState = E_GamePlayState.None;
+    public E_GamePlayState PreviousState = E_GamePlayState.None;
 
     [Header("Run Data")]
     public bool IsRunActive = false;
@@ -29,7 +30,7 @@ public class GameStateSO : ScriptableObject
 
     // ===== Default Values (Editor Persistence Problem 해결용) =====
     [Header("Default Values")]
-    [SerializeField] private E_GamePlayState _defaultState = E_GamePlayState.Boot;
+    [SerializeField] private E_GamePlayState _defaultState = E_GamePlayState.None;
 
     public void ResetToDefault()
     {

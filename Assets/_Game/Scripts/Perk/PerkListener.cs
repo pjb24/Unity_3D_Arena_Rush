@@ -107,6 +107,8 @@ public class PerkListener : MonoBehaviour
     {
         if (perk == null || perk.Effects == null) return;
 
+        bool healthPerkSelected = false;
+
         foreach (var e in perk.Effects)
         {
             if (!_mods.TryGetValue(e.stat, out var bucket))
@@ -129,6 +131,10 @@ public class PerkListener : MonoBehaviour
 
             _mods[e.stat] = bucket;
 
+            if (e.stat == E_PerkStat.MaxHP)
+            {
+                healthPerkSelected = true;
+            }
         }
 
         if (_logPerkState)
@@ -138,6 +144,11 @@ public class PerkListener : MonoBehaviour
         }
 
         RecalculateAll();
+
+        if (healthPerkSelected)
+        {
+            _health.Heal(_health.MaxHP);
+        }
 
         if (_logPerkState)
         {

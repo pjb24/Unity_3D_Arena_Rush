@@ -108,7 +108,7 @@ public class WaveManager : MonoBehaviour
             // 모두 사망할 때까지 대기
             yield return new WaitUntil(() => _alive <= 0);
 
-            Debug.Log("Wave " + _config.waves[i].name + " Cleared");
+            // Debug.Log("Wave " + _config.waves[i].name + " Cleared");
             _gs.SetClearedWave(i + 1);
             OnWaveClearedEvent.Raise(i);
 

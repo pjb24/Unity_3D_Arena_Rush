@@ -165,13 +165,13 @@ MonoBehaviour:
   _maxAimYawPerSec: 60
   _fireAlignAngleDeg: 6
   _fireType: 1
-  _fireCooldown: 0.6
-  _warmupDelay: 0
+  _fireCooldown: 1.6
+  _warmupDelay: 0.6
   _burstCount: 1
   _burstInterval: 0.06
   _spreadDeg: 1.5
   _damage: 10
-  _fireLockTime: 0.45
+  _fireLockTime: 1.6
   _projectilePrefab: {fileID: 1047769443948096901, guid: b6e64555f61ee694d97f9954428d1c1e, type: 3}
   _projectileSpeed: 40
   _projectileLife: 3
@@ -276,7 +276,6 @@ MonoBehaviour:
   _fireSpeedMin: 0.25
   _fireSpeedMax: 4
   _avoidSameHitTwice: 1
-  _avoidSameDieTwice: 1
 --- !u!1 &4952535319240272034
 GameObject:
   m_ObjectHideFlags: 0

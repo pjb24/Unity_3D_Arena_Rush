@@ -137,7 +137,7 @@ public class HelpPauseUI : MonoBehaviour
         if (_canvas != null) _canvas.enabled = false;
 
         Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.None;
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     private void HideImmediate()

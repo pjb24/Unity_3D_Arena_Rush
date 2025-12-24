@@ -204,7 +204,7 @@ public class PlayerController : MonoBehaviour
         _lastMoveDir = camF;
         _rb.MoveRotation(Quaternion.LookRotation(camF, Vector3.up));
 
-        Debug.Log("FaceCameraForwardImmediate");
+        // Debug.Log("FaceCameraForwardImmediate");
     }
 
     /// <summary>

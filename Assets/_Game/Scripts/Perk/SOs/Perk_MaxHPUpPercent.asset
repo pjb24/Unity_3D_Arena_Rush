@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Perk_MaxHPUpPercent
   m_EditorClassIdentifier: 
   _perkId: 00000000-0000-0000-0000-000000000000
-  _displayName: Max HP + 10%
-  _description: 
+  _displayName: Max HP + 10% And Fill HP
+  _description: Max HP + 10% And Fill HP
   _icon: {fileID: 568588117, guid: 7db85b2d6024c0643bced6e9ebfec22b, type: 3}
   _stackable: 1
   _maxStacks: 99
