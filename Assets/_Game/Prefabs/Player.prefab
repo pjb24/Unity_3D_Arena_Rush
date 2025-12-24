@@ -161,14 +161,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   OnPlayerDiedEvent: {fileID: 11400000, guid: 37f282b30246771489992eeeb78efdb6, type: 2}
-  _gun: {fileID: 2294150570191829032}
+  _gun: {fileID: 0}
   _aim: {fileID: 5940148617707091880}
-  _moveSpeed: 6
+  _moveSpeed: 10
   _turnSpeed: 18
   _faceDeadZone: 0.001
   _moveAction: {fileID: -1680190386980627800, guid: 9e4c1d5586cdc914893548e6c606e47f, type: 3}
   _dashAction: {fileID: 9033676267025546842, guid: 9e4c1d5586cdc914893548e6c606e47f, type: 3}
-  _logDamage: 1
+  _logDamage: 0
 --- !u!114 &8931429055457635531
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -285,7 +285,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _renderers:
   - {fileID: 202347990105447378}
-  - {fileID: 2783338821746265613}
+  - {fileID: 0}
   - {fileID: 8017696800315749488}
   _mode: 0
   _blinkInterval: 0.1
@@ -331,7 +331,7 @@ MonoBehaviour:
   _resolveMode: 0
   _groundMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 2560
   _rayMaxDistance: 500
 --- !u!1 &3989577465544476011
 GameObject:
@@ -343,7 +343,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4225205884472521704}
   m_Layer: 8
-  m_Name: Muzzle
+  m_Name: Muzzle Pos
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -364,13 +364,13 @@ Transform:
   m_Children: []
   m_Father: {fileID: 5716891192824389098}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &2387826989345715912
+--- !u!1001 &1135202966848523888
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 2901012927259019268}
+    m_TransformParent: {fileID: 7767513083854873103}
     m_Modifications:
     - target: {fileID: 1713629326968669098, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
       propertyPath: m_LocalPosition.x
@@ -386,7 +386,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1713629326968669098, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7071068
+      value: 0.7071067
       objectReference: {fileID: 0}
     - target: {fileID: 1713629326968669098, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
       propertyPath: m_LocalRotation.x
@@ -394,11 +394,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1713629326968669098, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: 0.000000007858032
       objectReference: {fileID: 0}
     - target: {fileID: 1713629326968669098, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: 0.00000007851483
       objectReference: {fileID: 0}
     - target: {fileID: 1713629326968669098, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -425,43 +425,18 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 6265663599496659120}
     - target: {fileID: 4536591810444758752, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
-      propertyPath: _muzzle
+      propertyPath: _muzzlePos
       value: 
       objectReference: {fileID: 4225205884472521704}
-    - target: {fileID: 4536591810444758752, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
-      propertyPath: _audioSource
-      value: 
-      objectReference: {fileID: 7562262233045422198}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
---- !u!114 &2294150570191829032 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4536591810444758752, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
-  m_PrefabInstance: {fileID: 2387826989345715912}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9df3b41cbe1063f41b1b7c5b3ae4580d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!23 &2783338821746265613 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 541316063610484933, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
-  m_PrefabInstance: {fileID: 2387826989345715912}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &3957339392667972962 stripped
+--- !u!4 &1731921984290360794 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1713629326968669098, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
-  m_PrefabInstance: {fileID: 2387826989345715912}
-  m_PrefabAsset: {fileID: 0}
---- !u!82 &7562262233045422198 stripped
-AudioSource:
-  m_CorrespondingSourceObject: {fileID: 5319259761060669118, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
-  m_PrefabInstance: {fileID: 2387826989345715912}
+  m_PrefabInstance: {fileID: 1135202966848523888}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8250052684371303879
 PrefabInstance:
@@ -526,9 +501,9 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 6502182839619065283, guid: 6e12d6d3a1300094eb50754c02fca5f5, type: 3}
+    - targetCorrespondingSourceObject: {fileID: 1852576806548013000, guid: 6e12d6d3a1300094eb50754c02fca5f5, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3957339392667972962}
+      addedObject: {fileID: 1731921984290360794}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6e12d6d3a1300094eb50754c02fca5f5, type: 3}
 --- !u!95 &2527793301171806294 stripped
@@ -536,9 +511,9 @@ Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 6e12d6d3a1300094eb50754c02fca5f5, type: 3}
   m_PrefabInstance: {fileID: 8250052684371303879}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &2901012927259019268 stripped
+--- !u!4 &7767513083854873103 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 6502182839619065283, guid: 6e12d6d3a1300094eb50754c02fca5f5, type: 3}
+  m_CorrespondingSourceObject: {fileID: 1852576806548013000, guid: 6e12d6d3a1300094eb50754c02fca5f5, type: 3}
   m_PrefabInstance: {fileID: 8250052684371303879}
   m_PrefabAsset: {fileID: 0}
 --- !u!137 &8017696800315749488 stripped

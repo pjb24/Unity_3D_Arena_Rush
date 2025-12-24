@@ -1,0 +1,587 @@
+fileFormatVersion: 2
+guid: f025c77387ce5fa46b536a9771d066b7
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_0
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 624
+        width: 240
+        height: 208
+      alignment: 9
+      pivot: {x: 0.4145758, y: 0.4950717}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: be029463b3c96b044b9383cbad6c3a13
+      internalID: -540727830
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_1
+      rect:
+        serializedVersion: 2
+        x: 244
+        y: 626
+        width: 331
+        height: 226
+      alignment: 9
+      pivot: {x: 0.52787244, y: 0.40021238}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 82f97ed2c9c041949be6606e00d58d9e
+      internalID: 1690489753
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_3
+      rect:
+        serializedVersion: 2
+        x: 580
+        y: 617
+        width: 197
+        height: 193
+      alignment: 9
+      pivot: {x: 0.53642434, y: 0.5053113}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0a7faffc202c66a4683bd7e4d2dfb2fc
+      internalID: 1545345569
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_4
+      rect:
+        serializedVersion: 2
+        x: 784
+        y: 626
+        width: 240
+        height: 226
+      alignment: 9
+      pivot: {x: 0.51281255, y: 0.39567634}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 35e1fde6af934a44794f02ff2c2a2ed5
+      internalID: -630493916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_7
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 403
+        width: 186
+        height: 202
+      alignment: 9
+      pivot: {x: 0.59920204, y: 0.4847758}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 15978c3ba3bde884aa2d00c2dd360b72
+      internalID: -2127753920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_9
+      rect:
+        serializedVersion: 2
+        x: 215
+        y: 403
+        width: 226
+        height: 204
+      alignment: 9
+      pivot: {x: 0.52267873, y: 0.47989997}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9791f114397a0a148afe3dca0dca5563
+      internalID: -138812466
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_10
+      rect:
+        serializedVersion: 2
+        x: 443
+        y: 411
+        width: 157
+        height: 207
+      alignment: 9
+      pivot: {x: 0.4869412, y: 0.45047867}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7f6baabd6274bde448f95044bffa06a9
+      internalID: -1650126702
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_11
+      rect:
+        serializedVersion: 2
+        x: 603
+        y: 402
+        width: 203
+        height: 213
+      alignment: 9
+      pivot: {x: 0.4394035, y: 0.45668626}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0fd0c9e5a42eee04c83874de13539657
+      internalID: -2108028777
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_12
+      rect:
+        serializedVersion: 2
+        x: 795
+        y: 426
+        width: 226
+        height: 189
+      alignment: 9
+      pivot: {x: 0.4727848, y: 0.41864368}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a6c58925a198cba4aa5daf0b30300497
+      internalID: 1183708425
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_14
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 199
+        width: 202
+        height: 197
+      alignment: 9
+      pivot: {x: 0.48477578, y: 0.52081394}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fdd7eb06b5e15704a9abf496acb5ec6d
+      internalID: -1154248960
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_15
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 211
+        width: 188
+        height: 182
+      alignment: 9
+      pivot: {x: 0.554526, y: 0.51126486}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f98a8ed2da9ed484388d31b7af1f578a
+      internalID: -816625893
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_17
+      rect:
+        serializedVersion: 2
+        x: 396
+        y: 188
+        width: 220
+        height: 216
+      alignment: 9
+      pivot: {x: 0.4813618, y: 0.5569495}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5c88cfd64dfefe9448bbb4942fece894
+      internalID: 1382824739
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_18
+      rect:
+        serializedVersion: 2
+        x: 612
+        y: 198
+        width: 161
+        height: 196
+      alignment: 9
+      pivot: {x: 0.5700369, y: 0.57322073}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f8c700046b4487489f7b9e649691aa3
+      internalID: -1070966064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_19
+      rect:
+        serializedVersion: 2
+        x: 780
+        y: 179
+        width: 244
+        height: 238
+      alignment: 9
+      pivot: {x: 0.51680446, y: 0.5602994}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dde53915097eb8b498a19b1140707959
+      internalID: -664979352
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_21
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 9
+        width: 188
+        height: 190
+      alignment: 9
+      pivot: {x: 0.5327155, y: 0.46223348}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8abf39d574d063d4587b27fe3dabf0ea
+      internalID: -1194724067
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_22
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 7
+        width: 188
+        height: 195
+      alignment: 9
+      pivot: {x: 0.5817891, y: 0.45794517}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e6423bba82e75554087ef9394f2b5301
+      internalID: 791819546
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_23
+      rect:
+        serializedVersion: 2
+        x: 420
+        y: 3
+        width: 201
+        height: 184
+      alignment: 9
+      pivot: {x: 0.44900027, y: 0.48328653}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 56bd5f43fe9ca66459caf0546e8236dd
+      internalID: 421463905
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_24
+      rect:
+        serializedVersion: 2
+        x: 644
+        y: 18
+        width: 163
+        height: 160
+      alignment: 9
+      pivot: {x: 0.41824397, y: 0.4679659}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 90017cc28a5daad4d891828d519ddf17
+      internalID: 1333714225
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explode_And_Shoot_Effect_25
+      rect:
+        serializedVersion: 2
+        x: 820
+        y: 3
+        width: 188
+        height: 183
+      alignment: 9
+      pivot: {x: 0.45092613, y: 0.5000001}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 01254a3f4df49a5428d8d5fb52e1fdb6
+      internalID: 1594116635
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: ce67e78a4d19ab84eab2c8666ce64aa4
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      ChatGPT_Image_2025_12_10_10_57_14_13: 141512137
+      ChatGPT_Image_2025_12_10_10_57_14_16: 339095664
+      ChatGPT_Image_2025_12_10_10_57_14_2: -1073817588
+      ChatGPT_Image_2025_12_10_10_57_14_20: 1182586495
+      ChatGPT_Image_2025_12_10_10_57_14_5: 1768117140
+      ChatGPT_Image_2025_12_10_10_57_14_6: -104464754
+      ChatGPT_Image_2025_12_10_10_57_14_8: -750759078
+      Explode_And_Shoot_Effect_0: -540727830
+      Explode_And_Shoot_Effect_1: 1690489753
+      Explode_And_Shoot_Effect_10: -1650126702
+      Explode_And_Shoot_Effect_11: -2108028777
+      Explode_And_Shoot_Effect_12: 1183708425
+      Explode_And_Shoot_Effect_14: -1154248960
+      Explode_And_Shoot_Effect_15: -816625893
+      Explode_And_Shoot_Effect_17: 1382824739
+      Explode_And_Shoot_Effect_18: -1070966064
+      Explode_And_Shoot_Effect_19: -664979352
+      Explode_And_Shoot_Effect_21: -1194724067
+      Explode_And_Shoot_Effect_22: 791819546
+      Explode_And_Shoot_Effect_23: 421463905
+      Explode_And_Shoot_Effect_24: 1333714225
+      Explode_And_Shoot_Effect_25: 1594116635
+      Explode_And_Shoot_Effect_3: 1545345569
+      Explode_And_Shoot_Effect_4: -630493916
+      Explode_And_Shoot_Effect_7: -2127753920
+      Explode_And_Shoot_Effect_9: -138812466
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

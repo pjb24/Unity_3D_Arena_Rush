@@ -34,8 +34,9 @@ public class Gun : MonoBehaviour
     [SerializeField] private bool _autoReload = true;
 
     [Header("Refs")]
-    [SerializeField] private Transform _muzzle;            // 총구 위치(없으면 transform 사용)
+    [SerializeField] private Transform _muzzlePos;         // 총구 위치(없으면 transform 사용)
     [SerializeField] private ParticleSystem _muzzleFlash;  // 총구 이펙트(옵션)
+    [SerializeField] private ParticleSystem _shootEffect;  // 발사 이펙트(옵션)
     [SerializeField] private GameObject _hitFxPrefab;      // 히트 스파크(옵션)
     [SerializeField] private AudioSource _audioSource;     // 사운드(옵션)
     [SerializeField] private AudioClip _fireSfx;           // 발사음(옵션)
@@ -79,7 +80,7 @@ public class Gun : MonoBehaviour
         _gs = FindAnyObjectByType<GameState>();
 
         if (_magazineSize > 0) _ammo = _magazineSize;
-        if (_muzzle == null) _muzzle = transform;
+        if (_muzzlePos == null) _muzzlePos = transform;
 
         if (_aim == null) _aim = FindAnyObjectByType<CrosshairAim>();
         if (_dash == null) _dash = GetComponentInParent<Dash>(); // Player 하위에 Gun이 붙어있는 케이스 대응
@@ -190,6 +191,7 @@ public class Gun : MonoBehaviour
 
         // 피드백
         PlayMuzzleFx();
+        PlayShootFx();
         PlayAudio(_fireSfx);
 
         // 자동재장전 체크
@@ -225,7 +227,7 @@ public class Gun : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             Vector3 dir = ApplySpread(baseDir, _spreadDegrees);
-            Ray ray = new Ray(_muzzle.position, dir);
+            Ray ray = new Ray(_muzzlePos.position, dir);
 
             if (Physics.Raycast(ray, out RaycastHit hit, _range, _hitMask, QueryTriggerInteraction.Ignore))
             {
@@ -238,7 +240,7 @@ public class Gun : MonoBehaviour
     // Ray 방향 = Muzzle -> CrosshairWorldPoint
     private Vector3 GetFireDirection_Crosshair()
     {
-        Vector3 start = _muzzle != null ? _muzzle.position : transform.position;
+        Vector3 start = _muzzlePos != null ? _muzzlePos.position : transform.position;
 
         if (_aim != null && _aim.TryGetCrosshairWorldPoint(start.y, out Vector3 worldPoint))
         {
@@ -253,7 +255,7 @@ public class Gun : MonoBehaviour
             if (f.sqrMagnitude > 1e-4f) return f.normalized;
         }
 
-        return _muzzle.forward.normalized;
+        return _muzzlePos.forward.normalized;
     }
 
     private Vector3 ApplySpread(Vector3 dir, float degrees)
@@ -294,9 +296,13 @@ public class Gun : MonoBehaviour
     private void PlayMuzzleFx()
     {
         if (_muzzleFlash == null) return;
-        _muzzleFlash.transform.position = _muzzle.position;
-        _muzzleFlash.transform.rotation = _muzzle.rotation;
         _muzzleFlash.Play(true);
+    }
+
+    private void PlayShootFx()
+    {
+        if (_shootEffect == null) return;
+        _shootEffect.Play(true);
     }
 
     private void PlayAudio(AudioClip clip)
