@@ -21,6 +21,7 @@ public class Dash : MonoBehaviour
     [SerializeField] private bool _setIFrameOnHealth = true;
     [Tooltip("대시 동안 무시할 레이어 (예: Enemy, Projectile)")]
     [SerializeField] private LayerMask _ignoreLayersDuringDash;
+    [SerializeField] private LayerMask _obstacleMask = ~0;     // TODO: 자기 레이어 제외 권장
 
     [Header("Movement Backend (자동 탐색)")]
     [SerializeField] private Rigidbody _rb;
@@ -40,6 +41,8 @@ public class Dash : MonoBehaviour
     [SerializeField] private bool _drawGizmos = true;
 
     private GameState _gs;
+
+    private readonly Collider[] _overlapBuf = new Collider[16];
 
     // 상태
     public bool IsDashing { get; private set; }
@@ -271,7 +274,7 @@ public class Dash : MonoBehaviour
 
         dir /= dist;
 
-        float radius = 0.3f;
+        float radius = 0.5f;
         float height = 2f;
         float skin = 0.02f;
 
@@ -281,13 +284,67 @@ public class Dash : MonoBehaviour
             height = Mathf.Max(_capsule.height, radius * 2f);
         }
 
-        Vector3 center = start + Vector3.up * (height * 0.5f - radius);
+        float half = Mathf.Max(0f, height * 0.5f - radius);
+
+        Vector3 center = start + Vector3.up * half;
+
+        Vector3 p1 = center + Vector3.up * half;
+        Vector3 p2 = center - Vector3.up * half;
+
+        // 1) 시작 겹침 체크
+        int hitCount = Physics.OverlapCapsuleNonAlloc(
+            p1, p2, radius, _overlapBuf, ~_obstacleMask, QueryTriggerInteraction.Ignore);
+
+        // 2) 겹치면 depenetration으로 밖으로 밀기
+        if (hitCount > 0)
+        {
+            Vector3 totalPush = Vector3.zero;
+            int pushHits = 0;
+
+            for (int i = 0; i < hitCount; i++)
+            {
+                var other = _overlapBuf[i];
+                if (!other) continue;
+                if (_capsule && other == _capsule) continue; // 안전장치(보통 레이어로 해결)
+
+                // 내 캡슐을 하나의 CapsuleCollider로 직접 넣기 어렵기 때문에,
+                // ComputePenetration에는 실제 내 Collider를 넘기는 게 가장 정확함.
+                // 가능하면 캐릭터에 붙은 _capsule을 그대로 사용.
+                if (_capsule)
+                {
+                    if (Physics.ComputePenetration(
+                        _capsule, _capsule.transform.position, _capsule.transform.rotation,
+                        other, other.transform.position, other.transform.rotation,
+                        out Vector3 pushDir, out float pushDist))
+                    {
+                        totalPush += pushDir * (pushDist + skin);
+                        pushHits++;
+                    }
+                }
+            }
+
+            if (pushHits > 0)
+            {
+                // start를 밀어낸 만큼 보정(여기서는 단순 합, 필요하면 반복/클램프)
+                start += totalPush;
+
+                // 보정 후 p1/p2 재계산
+                center = start + Vector3.up * half;
+                p1 = center + Vector3.up * half;
+                p2 = center - Vector3.up * half;
+            }
+            else
+            {
+                // 겹쳤는데 penetration 계산이 실패하면 "막힘"으로 간주하고 start 유지
+                return start;
+            }
+        }
+
         RaycastHit hit;
 
         // 캡슐 스윕
-        bool blocked = Physics.CapsuleCast(center + Vector3.up * (height * 0.5f - radius),
-                                           center - Vector3.up * (height * 0.5f - radius),
-                                           radius, dir, out hit, dist, ~0,
+        bool blocked = Physics.CapsuleCast(p1, p2,
+                                           radius, dir, out hit, dist, ~_obstacleMask,
                                            QueryTriggerInteraction.Ignore);
 
         if (blocked)

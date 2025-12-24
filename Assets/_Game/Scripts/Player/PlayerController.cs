@@ -27,6 +27,7 @@ public class PlayerController : MonoBehaviour
     [Header("Move")]
     [SerializeField, Range(0.5f, 20f)] private float _moveSpeed = 6f;
     public float MoveSpeed { get { return _moveSpeed; } set { _moveSpeed = value; } }
+    [SerializeField] private LayerMask _obstacleMask = ~0;     // TODO: 자기 레이어 제외 권장
 
     [Header("Facing")]
     [SerializeField, Range(1f, 30f)] private float _turnSpeed = 18f; // 회전 보간 속도
@@ -45,9 +46,12 @@ public class PlayerController : MonoBehaviour
     private Health _health;
     private Dash _dash;                 // Dash 컴포넌트 연동
     private GameState _gs;
+    private CapsuleCollider _capsule;
 
     // cached facing
     private Vector3 _lastMoveDir = Vector3.forward; // 입력 0일 때 유지할 마지막 방향(평면)
+
+    private readonly Collider[] _overlapBuf = new Collider[16];
 
     private void Awake()
     {
@@ -65,7 +69,9 @@ public class PlayerController : MonoBehaviour
         }
 
         if (_gun == null) _gun = GetComponentInChildren<Gun>();
-        if (_aim == null) _aim = FindAnyObjectByType<CrosshairAim>();
+        if (_aim == null) _aim = GetComponent<CrosshairAim>();
+
+        _capsule = GetComponent<CapsuleCollider>();
     }
 
     private void OnEnable()
@@ -141,7 +147,7 @@ public class PlayerController : MonoBehaviour
 
     private bool IsPlayableNow()
     {
-        return _gs != null || (_gs.IsPlayable() && !_gs.IsInputLocked());
+        return _gs != null && (_gs.IsPlayable() && !_gs.IsInputLocked());
     }
 
     /// <summary>
@@ -178,8 +184,102 @@ public class PlayerController : MonoBehaviour
     {
         if (moveDir.sqrMagnitude <= 0f) return;
 
-        Vector3 targetPos = _rb.position + moveDir * _moveSpeed * Time.fixedDeltaTime;
-        _rb.MovePosition(targetPos);
+        Vector3 start = _rb.position;
+        Vector3 target = start + moveDir * _moveSpeed * Time.fixedDeltaTime;
+
+        Vector3 safeTarget = ComputeWallSafeTarget(start, target);
+
+        _rb.MovePosition(safeTarget);
+    }
+
+    private Vector3 ComputeWallSafeTarget(Vector3 start, Vector3 target)
+    {
+        Vector3 dir = (target - start);
+        float dist = dir.magnitude;
+        if (dist < 0.0001f) return start;
+
+        dir /= dist;
+
+        float radius = 0.5f;
+        float height = 2f;
+        float skin = 0.02f;
+
+        if (_capsule)
+        {
+            radius = _capsule.radius;
+            height = Mathf.Max(_capsule.height, radius * 2f);
+        }
+
+        float half = Mathf.Max(0f, height * 0.5f - radius);
+
+        Vector3 center = start + Vector3.up * half;
+
+        Vector3 p1 = center + Vector3.up * half;
+        Vector3 p2 = center - Vector3.up * half;
+
+        // 1) 시작 겹침 체크
+        int hitCount = Physics.OverlapCapsuleNonAlloc(
+            p1, p2, radius, _overlapBuf, ~_obstacleMask, QueryTriggerInteraction.Ignore);
+
+        // 2) 겹치면 depenetration으로 밖으로 밀기
+        if (hitCount > 0)
+        {
+            Vector3 totalPush = Vector3.zero;
+            int pushHits = 0;
+
+            for (int i = 0; i < hitCount; i++)
+            {
+                var other = _overlapBuf[i];
+                if (!other) continue;
+                if (_capsule && other == _capsule) continue; // 안전장치(보통 레이어로 해결)
+
+                // 내 캡슐을 하나의 CapsuleCollider로 직접 넣기 어렵기 때문에,
+                // ComputePenetration에는 실제 내 Collider를 넘기는 게 가장 정확함.
+                // 가능하면 캐릭터에 붙은 _capsule을 그대로 사용.
+                if (_capsule)
+                {
+                    if (Physics.ComputePenetration(
+                        _capsule, _capsule.transform.position, _capsule.transform.rotation,
+                        other, other.transform.position, other.transform.rotation,
+                        out Vector3 pushDir, out float pushDist))
+                    {
+                        totalPush += pushDir * (pushDist + skin);
+                        pushHits++;
+                    }
+                }
+            }
+
+            if (pushHits > 0)
+            {
+                // start를 밀어낸 만큼 보정(여기서는 단순 합, 필요하면 반복/클램프)
+                start += totalPush;
+
+                // 보정 후 p1/p2 재계산
+                center = start + Vector3.up * half;
+                p1 = center + Vector3.up * half;
+                p2 = center - Vector3.up * half;
+            }
+            else
+            {
+                // 겹쳤는데 penetration 계산이 실패하면 "막힘"으로 간주하고 start 유지
+                return start;
+            }
+        }
+
+        RaycastHit hit;
+
+        // 캡슐 스윕
+        bool blocked = Physics.CapsuleCast(p1, p2,
+                                           radius, dir, out hit, dist, ~_obstacleMask,
+                                           QueryTriggerInteraction.Ignore);
+
+        if (blocked)
+        {
+            float safe = Mathf.Max(0f, hit.distance - skin);
+            return start + dir * safe;
+        }
+
+        return target;
     }
 
     private void FaceDirection(Vector3 dir)
