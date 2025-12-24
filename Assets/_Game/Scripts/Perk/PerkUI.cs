@@ -10,7 +10,6 @@
 /// - Time.timeScale 제어는 GameState가 수행 (UI는 패널 표시만)
 /// </summary>
 
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -30,16 +29,15 @@ public class PerkUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI[] _optionTitles = new TextMeshProUGUI[3];
     [SerializeField] private TextMeshProUGUI[] _optionDescs = new TextMeshProUGUI[3];
 
-    [Header("Behavior")]
-    [Tooltip("같은 세션에서 동일 퍼크 완전 배제(스택 불허)")]
-    [SerializeField] private bool _preventExactDuplicate = false;
-
     [Header("ScriptableObject Events")]
     public GameEventSO OnPerkSelectConfirmedEvent;    // Perk 선택 확정 이벤트
     public GameEventSO_Perk OnPerkAppliedEvent;    // Perk 선택 효과 적용 이벤트
 
     private readonly System.Random _rng = new System.Random();
-    private readonly List<Perk> _sessionTaken = new List<Perk>(32);
+
+    // 각 Perk ID별로 현재 몇 번 획득했는지 추적하는 딕셔너리
+    private readonly Dictionary<Perk, int> _perkOwnershipCounts = new Dictionary<Perk, int>();
+
     private readonly Perk[] _current = new Perk[3];
 
     private GameState _gs;
@@ -130,11 +128,12 @@ public class PerkUI : MonoBehaviour
         var picked = _current[index];
         if (picked == null) return;
 
-        // 세션 중복 처리 정책
-        if (_preventExactDuplicate)
+        // 선택한 Perk의 소지 개수 카운트 증가
+        if (!_perkOwnershipCounts.ContainsKey(picked))
         {
-            _sessionTaken.Add(picked);
+            _perkOwnershipCounts[picked] = 0;
         }
+        _perkOwnershipCounts[picked]++;
 
         // 브로드캐스트: 실제 적용은 외부 시스템이 처리
         if (OnPerkAppliedEvent != null)
@@ -175,15 +174,38 @@ public class PerkUI : MonoBehaviour
                 if (used.Contains(idx)) continue;
 
                 var candidate = _allPerks[idx];
-                if (_preventExactDuplicate && _sessionTaken.Contains(candidate))
+
+                // 최대 소지 개수 제한 로직 확인
+                if (IsMaxStacked(candidate))
                     continue;
 
                 pick = candidate;
                 used.Add(idx);
                 break;
             }
-            _current[i] = pick ?? _allPerks[_rng.Next(0, _allPerks.Length)];
+            _current[i] = pick;
         }
+    }
+
+    /// <summary>
+    /// 해당 Perk이 최대 중첩 수에 도달했는지 확인합니다.
+    /// </summary>
+    private bool IsMaxStacked(Perk perk)
+    {
+        if (perk == null) return true;
+
+        // 현재 소지 개수 확인 (없으면 0)
+        _perkOwnershipCounts.TryGetValue(perk, out int currentCount);
+
+        // 1. 중첩 불가능한 경우 (_stackable == false): 1개 이상이면 최대치
+        if (!perk.Stackable)
+        {
+            return currentCount >= 1;
+        }
+
+        // 2. 중첩 가능한 경우: 현재 개수가 MaxStacks 이상이면 최대치
+        // Perk.MaxStacks는 소스 코드에 따라 최소 1을 보장함
+        return currentCount >= perk.MaxStacks;
     }
 
     private void BindUI()
@@ -191,26 +213,43 @@ public class PerkUI : MonoBehaviour
         for (int i = 0; i < _current.Length; i++)
         {
             var p = _current[i];
+
+            // 타이틀 설정
             if (_optionTitles != null && i < _optionTitles.Length && _optionTitles[i] != null)
             {
                 _optionTitles[i].text = p != null ? p.DisplayName : "-";
             }
 
+            // 설명 설정
             if (_optionDescs != null && i < _optionDescs.Length && _optionDescs[i] != null)
             {
-                // 상세 설명 없으면 자동 요약
-                var desc = (p != null && !string.IsNullOrWhiteSpace(p.Description))
-                    ? p.Description
-                    : (p != null ? p.BuildCompactSummary() : "");
+                var desc = "";
+                if (p != null)
+                {
+                    // 상세 설명 없으면 자동 요약
+                    desc = (!string.IsNullOrWhiteSpace(p.Description))
+                        ? p.Description
+                        : (p != null ? p.BuildCompactSummary() : "");
+
+                    // [추가] UI에 현재 중첩 상태 표시 (선택 사항)
+                    if (p.Stackable && p.MaxStacks > 1)
+                    {
+                        _perkOwnershipCounts.TryGetValue(p, out int count);
+                        desc += $" ({count}/{p.MaxStacks})";
+                    }
+                }
+
                 _optionDescs[i].text = desc;
             }
 
+            // 아이콘 설정
             if (_optionIcons != null && i < _optionIcons.Length && _optionIcons[i] != null)
             {
                 _optionIcons[i].sprite = p != null ? p.Icon : null;
                 _optionIcons[i].enabled = p != null && p.Icon != null;
             }
 
+            // 버튼 활성화 여부
             if (_optionButtons != null && i < _optionButtons.Length && _optionButtons[i] != null)
             {
                 _optionButtons[i].interactable = p != null;

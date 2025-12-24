@@ -161,7 +161,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   OnPlayerDiedEvent: {fileID: 11400000, guid: 37f282b30246771489992eeeb78efdb6, type: 2}
-  _gun: {fileID: 0}
+  _gun: {fileID: 3545523825111744656}
   _aim: {fileID: 5940148617707091880}
   _moveSpeed: 10
   _turnSpeed: 18
@@ -438,6 +438,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1713629326968669098, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
   m_PrefabInstance: {fileID: 1135202966848523888}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &3545523825111744656 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4536591810444758752, guid: 7b96bad26e57c1b42864d09427760151, type: 3}
+  m_PrefabInstance: {fileID: 1135202966848523888}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9df3b41cbe1063f41b1b7c5b3ae4580d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &8250052684371303879
 PrefabInstance:
   m_ObjectHideFlags: 0

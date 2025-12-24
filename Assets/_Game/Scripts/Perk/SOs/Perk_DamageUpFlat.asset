@@ -17,7 +17,7 @@ MonoBehaviour:
   _description: 
   _icon: {fileID: -1982515245, guid: a07c0923dcac4c143b29a385c6892b48, type: 3}
   _stackable: 1
-  _maxStacks: 99
+  _maxStacks: 4
   _effects:
   - stat: 0
     op: 0

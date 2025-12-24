@@ -2397,7 +2397,6 @@ MonoBehaviour:
   - {fileID: 1825981596}
   - {fileID: 728607462}
   - {fileID: 944052025}
-  _preventExactDuplicate: 0
   OnPerkSelectConfirmedEvent: {fileID: 11400000, guid: ff7c1e6f85bc7e14fbbc4b027eb0f6df, type: 2}
   OnPerkAppliedEvent: {fileID: 11400000, guid: fa2414c7bb4f347458ba9402253200a7, type: 2}
 --- !u!225 &333294757
@@ -2507,7 +2506,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb8a1a2dff9dfc44a8d38d1c76cc1bfa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gun: {fileID: 762959655}
+  _gun: {fileID: 0}
   _player: {fileID: 1562268423}
   _dash: {fileID: 1562268428}
   _health: {fileID: 1562268422}
@@ -4527,17 +4526,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 748563076}
   m_CullTransparentMesh: 1
---- !u!114 &762959655 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2294150570191829032, guid: cdfe0ce4568bcb847896380be4b1b5a1, type: 3}
-  m_PrefabInstance: {fileID: 834374635045809075}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9df3b41cbe1063f41b1b7c5b3ae4580d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &788906201
 GameObject:
   m_ObjectHideFlags: 0

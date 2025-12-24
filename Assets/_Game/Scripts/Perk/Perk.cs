@@ -35,7 +35,6 @@ public struct PerkEffect
 public class Perk : ScriptableObject
 {
     [Header("Meta")]
-    [SerializeField] private string _perkId = GuidEmpty;
     [SerializeField] private string _displayName;
     [TextArea(1, 3)][SerializeField] private string _description;
     [SerializeField] private Sprite _icon;
@@ -45,14 +44,11 @@ public class Perk : ScriptableObject
     [SerializeField] private bool _stackable = true;
 
     [Tooltip("최대 중첩 수(스택 가능 시)")]
-    [SerializeField] private int _maxStacks = 99;
+    [SerializeField, Range(1, 99)] private int _maxStacks = 99;
 
     [Header("Effects")]
     [SerializeField] private List<PerkEffect> _effects = new List<PerkEffect>();
 
-    private const string GuidEmpty = "00000000-0000-0000-0000-000000000000";
-
-    public string PerkId => string.IsNullOrWhiteSpace(_perkId) ? GuidEmpty : _perkId;
     public string DisplayName => string.IsNullOrWhiteSpace(_displayName) ? name : _displayName;
     public string Description => _description;
     public Sprite Icon => _icon;
