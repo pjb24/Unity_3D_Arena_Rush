@@ -152,7 +152,7 @@ public class HUDController : MonoBehaviour
         if (_dashFill != null)
         {
             _dashFill.fillAmount = _dash.IsCooldown ? _dash.CooldownPercent : 0f; // 남은 비율
-            _dashFill.color = _dash.IsCooldown ? new Color(1f, 0.7f, 0.2f) : new Color(0.7f, 0.7f, 0.7f);
+            _dashFill.color = _dash.IsCooldown ? new Color(1f, 0.7f, 0.2f, 0.7f) : new Color(0.7f, 0.7f, 0.7f);
         }
     }
 }
