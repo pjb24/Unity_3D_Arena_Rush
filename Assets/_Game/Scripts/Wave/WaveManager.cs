@@ -47,7 +47,7 @@ public class WaveManager : MonoBehaviour
     {
         if (_gs != null)
         {
-            _gs.OnRunStartedEvent.AddListener(HandleRunStarted);
+            _gs.AddListenerRunStarted(HandleRunStarted);
         }
     }
 
@@ -55,7 +55,7 @@ public class WaveManager : MonoBehaviour
     {
         if (_gs != null)
         {
-            _gs.OnRunStartedEvent.RemoveListener(HandleRunStarted);
+            _gs.RemoveListenerRunStarted(HandleRunStarted);
         }
     }
 

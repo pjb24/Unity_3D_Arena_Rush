@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fc1ab013fccb124ca350e1c156f1015, type: 3}
   m_Name: Perk_DamageUpFlat
   m_EditorClassIdentifier: 
-  _perkId: 00000000-0000-0000-0000-000000000000
   _displayName: Damage + 10
   _description: 
   _icon: {fileID: -1982515245, guid: a07c0923dcac4c143b29a385c6892b48, type: 3}

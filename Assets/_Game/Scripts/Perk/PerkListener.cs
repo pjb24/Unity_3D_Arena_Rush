@@ -48,7 +48,7 @@ public class PerkListener : MonoBehaviour
 
         if (_gs != null)
         {
-            _gs.OnRunStartedEvent.AddListener(OnRunStarted);
+            _gs.AddListenerRunStarted(OnRunStarted);
         }
     }
 
@@ -61,7 +61,7 @@ public class PerkListener : MonoBehaviour
 
         if (_gs != null)
         {
-            _gs.OnRunStartedEvent.RemoveListener(OnRunStarted);
+            _gs.RemoveListenerRunStarted(OnRunStarted);
         }
     }
 

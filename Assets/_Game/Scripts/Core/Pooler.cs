@@ -404,7 +404,7 @@ public class Pooler : MonoBehaviour
         {
             if (_gs != null)
             {
-                _gs.OnRunStartedEvent.AddListener(OnRunStarted);
+                _gs.AddListenerRunStarted(OnRunStarted);
                 _gs.OnGameOverEvent.AddListener(OnGameOver);
             }
         }
@@ -420,7 +420,7 @@ public class Pooler : MonoBehaviour
 
         if (_gs != null)
         {
-            _gs.OnRunStartedEvent.RemoveListener(OnRunStarted);
+            _gs.RemoveListenerRunStarted(OnRunStarted);
             _gs.OnGameOverEvent.RemoveListener(OnGameOver);
         }
     }

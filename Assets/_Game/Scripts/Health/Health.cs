@@ -70,7 +70,7 @@ public class Health : MonoBehaviour
 
     private Action<Health> _onPlayerDeathEvent; // 사망 이벤트
     public void AddListenerOnPlayerDeathEvent(Action<Health> listener) => _onPlayerDeathEvent += listener;
-    public void RemoveListenerOnPlayerDeathEvent(Action<Health> listener) => _onPlayerDeathEvent += listener;
+    public void RemoveListenerOnPlayerDeathEvent(Action<Health> listener) => _onPlayerDeathEvent -= listener;
 
     private Action<Health> _onDeathEvent;
     public void AddListenerOnDeathEvent(Action<Health> listener) => _onDeathEvent += listener;

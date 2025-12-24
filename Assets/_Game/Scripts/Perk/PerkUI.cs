@@ -73,6 +73,7 @@ public class PerkUI : MonoBehaviour
             _gs.OnPerkSelectOpenedEvent.AddListener(HandlePerkSelectOpened);
             // 상태 변화 감시: PerkSelect 벗어나면 닫기(Playing/GameOver/Paused 등)
             _gs.AddListenerStateChanged(HandleStateChanged);
+            _gs.AddListenerRunStarted(HandleRunStarted);
         }
     }
 
@@ -84,6 +85,7 @@ public class PerkUI : MonoBehaviour
             _gs.OnPerkSelectOpenedEvent.RemoveListener(HandlePerkSelectOpened);
             // 상태 변화 감시: PerkSelect 벗어나면 닫기(Playing/GameOver/Paused 등)
             _gs.RemoveListenerStateChanged(HandleStateChanged);
+            _gs.RemoveListenerRunStarted(HandleRunStarted);
         }
     }
 
@@ -97,6 +99,11 @@ public class PerkUI : MonoBehaviour
     {
         if (current != GameStateSO.E_GamePlayState.PerkSelect)
             SetPanel(false);
+    }
+
+    private void HandleRunStarted()
+    {
+        _perkOwnershipCounts.Clear();
     }
 
     /// <summary>

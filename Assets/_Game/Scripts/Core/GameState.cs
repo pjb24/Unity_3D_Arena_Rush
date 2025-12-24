@@ -29,7 +29,6 @@ public class GameState : MonoBehaviour
     [SerializeField] private GameStateSO _gameStateData; // 씬에서 생성된 GameState.asset 연결
 
     [Header("ScriptableObject Events")]
-    public GameEventSO OnRunStartedEvent;             // 런 시작 이벤트
     public GameEventSO OnRunEndedEvent;               // 런 종료 이벤트
     public GameEventSO OnPerkSelectOpenedEvent;       // Perk 선택 화면 열림 이벤트
     public GameEventSO_GameOverInfo OnGameOverEvent;               // 게임오버 이벤트
@@ -65,6 +64,11 @@ public class GameState : MonoBehaviour
     private Action<GameStateSO.E_GamePlayState, GameStateSO.E_GamePlayState> _onStateChangedEvent; // 상태 변경 이벤트
     public void AddListenerStateChanged(Action<GameStateSO.E_GamePlayState, GameStateSO.E_GamePlayState> listener) => _onStateChangedEvent += listener;
     public void RemoveListenerStateChanged(Action<GameStateSO.E_GamePlayState, GameStateSO.E_GamePlayState> listener) => _onStateChangedEvent -= listener;
+
+    private Action _onRunStartedEvent;   // 런 시작 이벤트
+    public void AddListenerRunStarted(Action listener) => _onRunStartedEvent += listener;
+    public void RemoveListenerRunStarted(Action listener) => _onRunStartedEvent -= listener;
+
 
     private void Awake()
     {
@@ -127,7 +131,7 @@ public class GameState : MonoBehaviour
         _sessionStartTime = Time.time;
         ChangeState(GameStateSO.E_GamePlayState.Playing);
 
-        OnRunStartedEvent.Raise();
+        _onRunStartedEvent.Invoke();
     }
 
     /// <summary>웨이브 번호 갱신(외부 WaveManager에서 호출)</summary>

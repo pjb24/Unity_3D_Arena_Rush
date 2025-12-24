@@ -20,10 +20,6 @@ public class EnemySpawnManager : MonoBehaviour
     [Header("Wave Options")]
     [SerializeField] private bool _shuffleEachWave = true;
 
-    // ===== ScriptableObject References =====
-    [Header("Subscribe Events")]
-    [SerializeField] private GameEventSO _onRunStartedEvent;
-
     [Header("GameState Integration")]
     [SerializeField] private bool _respectGameState = true;          // GameState를 존중
     [SerializeField] private bool _blockWhenNotPlayable = true;      // 비플레이 상태에서 스폰 차단
@@ -59,10 +55,7 @@ public class EnemySpawnManager : MonoBehaviour
 
     private void OnEnable()
     {
-        if (_onRunStartedEvent != null)
-        {
-            _onRunStartedEvent.AddListener(OnRunStarted);
-        }
+        _gs.AddListenerRunStarted(OnRunStarted);
 
         // 초기 Player 없으면 한 번 시도
         if (_player == null)
@@ -74,10 +67,7 @@ public class EnemySpawnManager : MonoBehaviour
 
     private void OnDisable()
     {
-        if (_onRunStartedEvent != null)
-        {
-            _onRunStartedEvent.RemoveListener(OnRunStarted);
-        }
+        _gs.RemoveListenerRunStarted(OnRunStarted);
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
