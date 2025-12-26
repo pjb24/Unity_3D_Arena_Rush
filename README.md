@@ -4,12 +4,19 @@
 
 ---
 
+## Play URL
+https://play.unity.com/ko/games/21778e20-4bf0-4088-92fa-dc3b4e019626/3d-shooting-arena-rush
+
+![alt text](Thumbnail-1.png)
+
+![alt text](Thumbnail2-1.png)
+
 ## **1. 프로젝트 개요**
 
-Arena Rush는 소형 아레나에서 몰려오는 적 웨이브를 생존하며 가능한 한 오래 전투를 지속하는 **3D 액션 슈팅 미니게임**이다. 짧은 세션, 즉각 반응성, 반복 플레이 루프를 목표로 설계되었다.
+Arena Rush는 소형 아레나에서 몰려오는 적 웨이브를 가능한 한 빠르게 클리어하는 **3D 액션 슈팅 미니게임**이다. 짧은 세션, 즉각 반응성, 반복 플레이 루프를 목표로 설계되었다.
 
 - **장르:** 3D Action Shooter · Wave Survival
-- **카메라:** Top-Down / TPS Short Distance
+- **카메라:** TPS Short Distance
 - **플레이타임:** 3~5분
 - **개발 목적:** 기능 프로토타입, 시스템 검증, 반복 플레이 설계 테스트
 
@@ -36,7 +43,7 @@ Arena Rush는 소형 아레나에서 몰려오는 적 웨이브를 생존하며 
 - 연사형 기본 사격
 - Dash(쿨다운)
 - HP / MoveSpeed / Damage / FireRate / DashCooldown
-- CharacterController 또는 Rigidbody 기반 이동
+- Rigidbody 기반 이동
 
 ### **3.2 Weapon System**
 
@@ -51,7 +58,7 @@ Arena Rush는 소형 아레나에서 몰려오는 적 웨이브를 생존하며 
     - **Chaser:** 플레이어 추적
     - **Shooter:** 사거리 내 정지 후 원거리 공격
 - 공통: Health, Collision, Attack Cooldown
-- 스폰 포인트 4개, 웨이브별 증가
+- 스폰 포인트 9개, 웨이브별 스폰 개체 수 증가
 
 ### **3.4 Wave System**
 
@@ -97,22 +104,22 @@ Arena Rush는 소형 아레나에서 몰려오는 적 웨이브를 생존하며 
 
 ### **초기 우선순위(P1)**
 
-- [ ]  씬 구성 + 카메라 + 기본 바닥/벽
-- [ ]  Input Actions 설정
-- [ ]  Player 이동 / 조준 / 사격
-- [ ]  Health / Damage / Death 이벤트
-- [ ]  EnemyChaser 기본 AI
-- [ ]  WaveManager / 스폰 포인트
-- [ ]  Perk 시스템 / Perk 선택 UI
-- [ ]  HUD 구현
-- [ ]  GameState(Playing / PerkSelect / GameOver)
+- [x]  씬 구성 + 카메라 + 기본 바닥/벽
+- [x]  Input Actions 설정
+- [x]  Player 이동 / 조준 / 사격
+- [x]  Health / Damage / Death 이벤트
+- [x]  EnemyChaser 기본 AI
+- [x]  WaveManager / 스폰 포인트
+- [x]  Perk 시스템 / Perk 선택 UI
+- [x]  HUD 구현
+- [x]  GameState(Playing / PerkSelect / GameOver)
 
 ### **보강(P2)**
 
-- [ ]  Dash 기능
-- [ ]  EnemyShooter 구현
-- [ ]  ObjectPooler 구축
-- [ ]  기본 사운드 / 간단 파티클
+- [x]  Dash 기능
+- [x]  EnemyShooter 구현
+- [x]  ObjectPooler 구축
+- [x]  기본 사운드 / 간단 파티클
 - [ ]  Wave 밸런싱
 
 ### **후순위(P3)**
@@ -121,71 +128,98 @@ Arena Rush는 소형 아레나에서 몰려오는 적 웨이브를 생존하며 
 - [ ]  다양한 무기(Shotgun, Laser 등)
 - [ ]  Perk 확장
 - [ ]  Arena Theme 적용
-- [ ]  세션 기록 저장
+- [x]  세션 기록 저장
 
 ---
 
-## **6. 폴더 구조 (초기안)**
+## **6. 폴더 구조**
 
 ```
 Assets/
  └ _Game/
-     ├ Scripts/
-     │   ├ Core/
-     │   ├ Player/
-     │   ├ Enemy/
-     │   ├ Wave/
-     │   ├ Perk/
-     │   └ UI/
+     ├ Animations/
+     ├ Audio/
+     ├ Materials/
+     ├ Model/
      ├ Prefabs/
      ├ Scenes/
-     ├ Materials/
-     ├ Audio/
-     ├ UI/
-     └ Dev/
+     ├ Scripts/
+     │   ├ Core/
+     │   │   └ Architecture/
+     │   ├ Data/
+     │   │   ├ Events/
+     │   │   └ GameState/
+     │   ├ Enemy/
+     │   │   ├ Bruiser/
+     │   │   └ Shooter/
+     │   ├ Health/
+     │   ├ ObjectFade/
+     │   ├ Perk/
+     │   │   └ SOs/
+     │   ├ Player/
+     │   ├ UI/
+     │   │   ├ Floating Damage/
+     │   │   └ HUD/
+     │   └ Wave/
+     ├ Shaders/
+     ├ Sprites/
+     └ UI/
 ```
 
 ---
 
-## **7. 스크립트 구성 (Minimum Set)**
+## **7. 스크립트 구성**
 
-### **Core**
+#### **Core**
+- **GameState.cs**: 메인 게임 상태(Playing, Paused, PerkSelection, GameOver)를 관리합니다.
+- **Pooler.cs**: 발사체, 적, 이펙트 등의 성능을 위한 범용 오브젝트 풀링 시스템입니다.
+- **WebGLPointerLock.cs**: WebGL 빌드에 특정한 포인터 잠금을 처리합니다.
+- **Core/Architecture**: `ScriptableObject`를 사용하는 이벤트 기반 아키텍처 구성 요소입니다.
+    - **GameEventSO.cs**: 게임 이벤트를 생성하기 위한 기본 클래스입니다.
+    - **GameStateSO.cs**: 현재 게임 상태를 나타내는 `ScriptableObject`입니다.
 
-- GameState.cs
-- Pooler.cs
+#### **Data**
+- 여러 시스템을 분리하여 이벤트 및 게임 상태 관리를 위한 `ScriptableObject` 에셋을 포함합니다.
 
-### **Player**
+#### **Player**
+- **PlayerController.cs**: 플레이어 입력, 이동(Rigidbody 사용) 및 전반적인 상태를 처리합니다.
+- **Gun.cs**: 발사 속도, 데미지, 시각 효과를 포함한 무기 발사 로직을 관리합니다.
+- **Dash.cs**: 재사용 대기시간이 있는 플레이어의 대시 능력을 구현합니다.
+- **CrosshairAim.cs**: 십자선의 위치와 조준 방향을 제어합니다.
+- **PlayerAnimDriver.cs**: 상태(이동, 정지, 대시)에 따라 플레이어 애니메이션을 구동합니다.
 
-- PlayerController.cs
-- Gun.cs
-- Dash.cs
-- Health.cs
+#### **Enemy**
+- **EnemySpawnManager.cs**: 현재 웨이브 구성에 따라 적의 스폰을 관리합니다.
+- **Projectile.cs**: 슈팅 적이 사용하는 범용 발사체 스크립트입니다.
+- **Enemy/Bruiser**:
+    - **EnemyChaser.cs**: 플레이어를 쫓는 근접 "브루저" 적의 AI입니다.
+    - **EnemyMeleeHitbox.cs**: 브루저의 근접 공격을 위한 히트박스를 관리합니다.
+- **Enemy/Shooter**:
+    - **EnemyShooter.cs**: 원거리 "슈터" 적의 AI입니다.
+    - **EnemyShooterAnimDriver.cs**: 슈터의 애니메이션을 구동합니다.
 
-### **Enemy**
+#### **Wave**
+- **WaveManager.cs**: 적 웨이브의 흐름을 제어하고, 진행 상황을 추적하며, 이벤트를 발생시킵니다.
+- **WaveConfig.cs**: 각 적 웨이브의 구성(적 유형, 수)을 정의하는 `ScriptableObject`입니다.
 
-- EnemyChaser.cs
-- EnemyShooter.cs
-- EnemySpawnManager.cs
+#### **Perk**
+- **Perk.cs**: 효과를 정의하는 퍽의 기본 클래스입니다.
+- **PerkListener.cs**: 선택한 퍽을 플레이어 또는 다른 시스템에 적용합니다.
+- **PerkUI.cs**: 퍽 선택 UI를 관리합니다.
+- **Perk/SOs**: 각 특정 퍽(예: DamageUp, FireRateUp)에 대한 `ScriptableObject` 에셋입니다.
 
-### **Wave**
+#### **Health**
+- **Health.cs**: 모든 엔티티(플레이어, 적)의 체력을 관리하기 위한 범용 컴포넌트입니다. 데미지를 입고 죽는 것을 처리합니다.
+- **InvulnVisual.cs**: 무적 기간 동안의 시각적 피드백을 제어합니다.
 
-- WaveManager.cs
-- WaveConfig.cs (ScriptableObject)
+#### **UI**
+- **HUDController.cs**: HP, 웨이브 카운트 등과 같은 요소를 업데이트하는 헤드업 디스플레이의 메인 컨트롤러입니다.
+- **GameOverUI.cs**: 게임 오버 화면을 관리합니다.
+- **HelpPauseUI.cs**: 일시정지 메뉴와 도움말 정보를 처리합니다.
+- **UI/Floating Damage**: 월드 스페이스와 스크린 스페이스 모두에서 플로팅 데미지 숫자를 표시하는 것을 관리합니다.
 
-### **Perk**
-
-- Perk.cs (ScriptableObject)
-- PerkUI.cs
-
-### **UI**
-
-- HUDController.cs
-- PopupController.cs
-
-### **Dev**
-
-- DevConsole.cs
-- DebugDrawUtil.cs
+#### **ObjectFade**
+- **ObstacleFaderDither.cs**: 디더 효과를 사용하여 카메라와 플레이어 사이의 오브젝트를 페이드합니다.
 
 ---
 
@@ -203,11 +237,13 @@ Assets/
 
 총 **약 6~7주** 예상.
 
+25.12.03 - 25.12.26 (17일 소요)
+
 ---
 
 ## **9. 릴리즈 목표**
 
-- 10웨이브 이상 생존 가능한 완전한 게임 루프
+- 10웨이브 이상 플레이 가능한 게임 루프
 - Perk 5종 이상의 체감 변화
 - 60fps 유지
 - 최소 아트 기반의 기능 완성 프로토타입 빌드(Win64)
