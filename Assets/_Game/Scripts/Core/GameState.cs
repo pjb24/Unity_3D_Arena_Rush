@@ -200,10 +200,30 @@ public class GameState : MonoBehaviour
 
         // Load bests
         int bestWave = PlayerPrefs.GetInt(_PP_BestWave, 0);
-        float bestTime = PlayerPrefs.GetFloat(_PP_BestTime, 0);
+        float bestTime = PlayerPrefs.GetFloat(_PP_BestTime, float.MaxValue);
+        if (bestTime <= 0f) bestTime = float.MaxValue;
 
-        bool newBestWave = _gameStateData.ClearedWave > bestWave;
-        bool newBestTime = survived > bestTime;
+        bool newBestWave = false;
+        bool newBestTime = false;
+
+        // ===== 규칙 적용 =====
+        if (_gameStateData.ClearedWave > bestWave)
+        {
+            bestWave = _gameStateData.ClearedWave;
+            bestTime = survived;
+
+            newBestWave = true;
+            newBestTime = true; // Wave가 갱신되면 Time도 교체
+        }
+        else if (_gameStateData.ClearedWave == bestWave)
+        {
+            // 같은 웨이브에서는 "더 짧은 시간"이 더 좋은 기록
+            if (survived < bestTime)
+            {
+                bestTime = survived;
+                newBestTime = true;
+            }
+        }
 
         if (newBestWave)
         {
